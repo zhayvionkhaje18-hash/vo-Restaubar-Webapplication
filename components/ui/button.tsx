@@ -1,5 +1,6 @@
 import { Button as ButtonPrimitive } from '@base-ui/react/button'
 import { cva, type VariantProps } from 'class-variance-authority'
+import * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
@@ -16,7 +17,7 @@ const buttonVariants = cva(
         ghost:
           'hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50',
         destructive:
-          'bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40',
+          'bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 focus-visible:ring-destructive/40',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
@@ -40,18 +41,42 @@ const buttonVariants = cva(
   },
 )
 
+type ButtonProps = React.ComponentProps<typeof ButtonPrimitive> &
+  VariantProps<typeof buttonVariants> & {
+    /** Render as child element (e.g. Next Link) while keeping button styling. */
+    asChild?: boolean
+  }
+
 function Button({
   className,
   variant = 'default',
   size = 'default',
+  asChild = false,
+  children,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonProps) {
+  const styles = cn(buttonVariants({ variant, size, className }))
+
+  if (asChild && React.isValidElement(children)) {
+    // Merge our button styles + props into the single child (e.g. <Link/>).
+    const child = children as React.ReactElement<Record<string, unknown>>
+    const childProps = child.props as Record<string, unknown>
+    return React.cloneElement(child, {
+      ...props,
+      ...childProps,
+      className: cn(styles, childProps.className as string | undefined),
+      'data-slot': 'button',
+    } as Record<string, unknown>)
+  }
+
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
+      className={styles}
+      {...(props as React.ComponentProps<typeof ButtonPrimitive>)}
+    >
+      {children}
+    </ButtonPrimitive>
   )
 }
 

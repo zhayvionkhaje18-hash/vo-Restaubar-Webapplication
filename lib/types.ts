@@ -1,9 +1,9 @@
 export type UserRole = "admin" | "pos" | "waiter"
 export type TableStatus = "available" | "occupied" | "reserved" | "cleaning"
-export type OrderStatus = "pending" | "preparing" | "ready" | "served" | "completed" | "cancelled"
+export type OrderStatus = "pending" | "confirmed" | "preparing" | "ready" | "served" | "completed" | "cancelled"
 export type PaymentStatus = "unpaid" | "pending" | "paid" | "refunded"
 export type PaymentMethod = "cash" | "card" | "gcash" | "maya" | "other"
-export type ReservationStatus = "pending" | "confirmed" | "seated" | "cancelled" | "no_show"
+export type ReservationStatus = "pending" | "confirmed" | "seated" | "completed" | "cancelled" | "no_show"
 
 export interface Profile {
   id: string
@@ -24,6 +24,8 @@ export interface RestaurantTable {
   zone: string | null
   status: TableStatus
   assigned_waiter: string | null
+  current_order_id: string | null
+  notes: string | null
   created_at: string
   updated_at: string
 }
@@ -65,6 +67,7 @@ export interface Order {
   order_number: number
   table_id: string | null
   session_token: string | null
+  customer_name: string | null
   status: OrderStatus
   payment_status: PaymentStatus
   subtotal: number
@@ -75,6 +78,7 @@ export interface Order {
   served_by: string | null
   created_at: string
   updated_at: string
+  completed_at: string | null
 }
 
 export interface OrderItem {
@@ -117,11 +121,13 @@ export interface Reservation {
   id: string
   customer_name: string
   customer_phone: string | null
+  customer_email: string | null
   party_size: number
   reserved_at: string
   table_id: string | null
   status: ReservationStatus
   notes: string | null
+  created_by: string | null
   created_at: string
   updated_at: string
 }
@@ -134,6 +140,24 @@ export interface ActivityLog {
   entity: string | null
   detail: string | null
   created_at: string
+}
+
+export interface RestaurantSettings {
+  id: 1
+  name: string
+  tagline: string | null
+  address: string | null
+  phone: string | null
+  email: string | null
+  tin: string | null
+  logo_url: string | null
+  currency: string
+  tax_rate: number
+  service_charge: number
+  receipt_footer: string | null
+  open_time: string | null
+  close_time: string | null
+  updated_at: string
 }
 
 export interface OrderWithItems extends Order {

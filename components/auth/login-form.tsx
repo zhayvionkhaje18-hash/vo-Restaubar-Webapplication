@@ -12,12 +12,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2 } from "lucide-react"
+import type { UserRole } from "@/lib/types"
 
 const DEMO_ACCOUNTS = [
   { role: "Admin", email: "admin@lumiere.app" },
   { role: "POS / Cashier", email: "pos@lumiere.app" },
   { role: "Waiter", email: "waiter@lumiere.app" },
 ]
+
+function isUserRole(v: unknown): v is UserRole {
+  return v === "admin" || v === "pos" || v === "waiter"
+}
 
 export function LoginForm() {
   const router = useRouter()
@@ -33,21 +38,34 @@ export function LoginForm() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+
     const supabase = createClient()
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
     if (signInError) {
+      console.error("[login] signInWithPassword failed:", signInError)
       setError(signInError.message)
       setLoading(false)
       return
     }
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    let dest = next || "/"
-    if (!next && user) {
-      const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-      dest = ROLE_HOME[profile?.role ?? "waiter"] ?? "/"
-    }
+
+    const user = data.user
+    // Read role from auth metadata (set by /signup). If missing or invalid,
+    // the destination layout will self-heal via getSessionProfile() -> ensure_profile().
+    const metaRole = user?.user_metadata?.role
+    const role: UserRole = isUserRole(metaRole) ? metaRole : "waiter"
+
+    // Priority: explicit ?next= param (e.g. /admin bounced us here),
+    // otherwise route by the role captured at signup.
+    const dest = next || ROLE_HOME[role] || "/"
+
+    console.log("[login] success", {
+      userId: user?.id,
+      email: user?.email,
+      metaRole,
+      resolvedRole: role,
+      dest,
+    })
+
     router.push(dest)
     router.refresh()
   }

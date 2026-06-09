@@ -1,0 +1,587 @@
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[auth] ensure_profile failed: Could not find the function public.ensure_profile without parameters in the schema cache
+[auth] ensure_profile failed: Could not find the function public.ensure_profile without parameters in the schema cache
+[auth] ensure_profile failed: Could not find the function public.ensure_profile without parameters in the schema cache
+[auth] ensure_profile failed: Could not find the function public.ensure_profile without parameters in the schema cache
+[auth] ensure_profile failed: Could not find the function public.ensure_profile without parameters in the schema cache
+[auth] ensure_profile failed: Could not find the function public.ensure_profile without parameters in the schema cache
+[auth] ensure_profile failed: Could not find the function public.ensure_profile without parameters in the schema cache
+[auth] ensure_profile failed: Could not find the function public.ensure_profile without parameters in the schema cache
+[auth] ensure_profile failed: Could not find the function public.ensure_profile without parameters in the schema cache
+[auth] ensure_profile failed: Could not find the function public.ensure_profile without parameters in the schema cache
+[auth] ensure_profile failed: Could not find the function public.ensure_profile without parameters in the schema cache
+[auth] ensure_profile failed: Could not find the function public.ensure_profile without parameters in the schema cache
+[auth] ensure_profile failed: Could not find the function public.ensure_profile without parameters in the schema cache
+[browser] [login] signInWithPassword failed: AuthApiError: Invalid login credentials
+    at handleError (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:957:11)
+    at async _handleRequest (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:1007:9)
+    at async _request (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:987:18)
+    at async SupabaseAuthClient.signInWithPassword (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:4493:23)
+    at async handleSubmit (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/_08t-vui._.js:561:46) (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/_08t-vui._.js:566:21)
+[browser] [login] signInWithPassword failed: AuthApiError: Invalid login credentials
+    at handleError (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:957:11)
+    at async _handleRequest (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:1007:9)
+    at async _request (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:987:18)
+    at async SupabaseAuthClient.signInWithPassword (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:4493:23)
+    at async handleSubmit (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/_08t-vui._.js:561:46) (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/_08t-vui._.js:566:21)
+[browser] [login] signInWithPassword failed: AuthApiError: Invalid login credentials
+    at handleError (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:957:11)
+    at async _handleRequest (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:1007:9)
+    at async _request (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:987:18)
+    at async SupabaseAuthClient.signInWithPassword (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:4493:23)
+    at async handleSubmit (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/_08t-vui._.js:561:46) (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/_08t-vui._.js:566:21)
+[browser] [login] signInWithPassword failed: AuthApiError: Invalid login credentials
+    at handleError (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:957:11)
+    at async _handleRequest (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:1007:9)
+    at async _request (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:987:18)
+    at async SupabaseAuthClient.signInWithPassword (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_%40supabase_auth-js_dist_module_0.pzobh._.js:4493:23)
+    at async handleSubmit (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/_08t-vui._.js:561:46) (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/_08t-vui._.js:566:21)
+[browser] Uncaught Error: Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <SegmentViewNode type="page" pagePath="waiter/pag...">
+      <SegmentTrieNode>
+      <WaiterPage>
+        <WaiterDashboard profile={{id:"86772f...", ...}}>
+          ...
+            <div className="flex min-w...">
+              <header>
+              <main className="flex-1 px-...">
+                <div className="space-y-6">
+                  <div>
+                  <div>
+                  <Card>
+                    <div data-slot="card" data-size="default" className={"group/ca..."}>
+                      <CardHeader>
+                      <CardContent>
+                        <div data-slot="card-content" className="px-(--card...">
+                          <div className="space-y-3">
+                            <div className="flex items...">
+                              <div>
+                              <div>
+                              <div className="text-right">
+                                <Badge variant="outline">
+                                  <span
+                                    data-slot="badge"
+                                    data-variant="outline"
+                                    className={"group/badge inline-flex h-5 w-fit shrink-0 items-center justify-cente..."}
+                                    ref={null}
+                                  >
++                                   2:23 AM
+-                                   2:13 AM
+                            ...
+                  ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at throwOnHydrationMismatch (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at prepareToHydrateHostInstance (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3372:23)
+    at completeWork (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6922:60)
+    at runWithFiberInDEV (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at completeUnitOfWork (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9622:23)
+    at performUnitOfWork (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9557:28)
+    at workLoopConcurrentByScheduler (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at span (<anonymous>)
+    at renderTag (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_0x-a~4l._.js:7206:200)
+    at evaluateRenderProp (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_0x-a~4l._.js:7171:20)
+    at useRenderElement (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_0x-a~4l._.js:7075:12)
+    at useRender (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_0x-a~4l._.js:17235:213)
+    at Badge (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/_05g-seu._.js:1319:203)
+    at <unknown> (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/_05g-seu._.js:1792:261)
+    at Array.map (<anonymous>)
+    at WaiterDashboard (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/_05g-seu._.js:1729:62)
+    at WaiterPage (app\waiter\page.tsx:10:10)
+   8 |   if (profile.role !== "waiter") redirect("/")
+   9 |
+> 10 |   return <WaiterDashboard profile={profile} />
+     |          ^
+  11 | }
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: "/admin", label: ..., icon: {$$typeof: ..., render: ...}}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Orders", icon: {$$typeof: ..., render: ...}}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Menu", icon: {$$typeof: ..., render: ...}}
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Tables", icon: {$$typeof: ..., render: ...}}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Staff", icon: {$$typeof: ..., render: ...}}
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function LayoutDashboard}
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1445710863'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function ClipboardList}
+                          ^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '380925583'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function UtensilsCrossed}
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1957281743'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Grid3x3}
+                          ^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1426286671'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function ScanLine}
+                          ^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '2263210479'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function CalendarClock}
+                          ^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '2350161359'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Users}
+                          ^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1332341391'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function History}
+                          ^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '4242161039'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Settings}
+                          ^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '2374334383'
+}
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: "/admin", label: ..., icon: {$$typeof: ..., render: ...}}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Orders", icon: {$$typeof: ..., render: ...}}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Menu", icon: {$$typeof: ..., render: ...}}
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Tables", icon: {$$typeof: ..., render: ...}}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Staff", icon: {$$typeof: ..., render: ...}}
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function LayoutDashboard}
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1445710863'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function ClipboardList}
+                          ^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '380925583'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function UtensilsCrossed}
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1957281743'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Grid3x3}
+                          ^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1426286671'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function ScanLine}
+                          ^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '2263210479'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function CalendarClock}
+                          ^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '2350161359'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Users}
+                          ^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1332341391'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function History}
+                          ^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '4242161039'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Settings}
+                          ^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '2374334383'
+}
+[browser] Uncaught Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function LayoutDashboard}
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>:1:18)
+    at resolveErrorDev (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:1919:150)
+    at processFullStringRow (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2434:29)
+    at processFullBinaryRow (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2393:9)
+    at processBinaryChunk (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2502:221)
+    at progress (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2689:13)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: "/admin", label: ..., icon: {$$typeof: ..., render: ...}}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Orders", icon: {$$typeof: ..., render: ...}}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Menu", icon: {$$typeof: ..., render: ...}}
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Tables", icon: {$$typeof: ..., render: ...}}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Staff", icon: {$$typeof: ..., render: ...}}
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function LayoutDashboard}
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1445710863'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function ClipboardList}
+                          ^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '380925583'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function UtensilsCrossed}
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1957281743'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Grid3x3}
+                          ^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1426286671'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function ScanLine}
+                          ^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '2263210479'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function CalendarClock}
+                          ^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '2350161359'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Users}
+                          ^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1332341391'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function History}
+                          ^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '4242161039'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Settings}
+                          ^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '2374334383'
+}
+[browser] Uncaught Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Settings}
+                          ^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>:1:18)
+    at resolveErrorDev (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:1919:105)
+    at processFullStringRow (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2434:29)
+    at processFullBinaryRow (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2393:9)
+    at processBinaryChunk (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2502:221)
+    at progress (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2689:13)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: "/admin", label: ..., icon: {$$typeof: ..., render: ...}}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Orders", icon: {$$typeof: ..., render: ...}}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Menu", icon: {$$typeof: ..., render: ...}}
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Tables", icon: {$$typeof: ..., render: ...}}
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: "Staff", icon: {$$typeof: ..., render: ...}}
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {href: ..., label: ..., icon: {$$typeof: ..., render: ...}}
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function LayoutDashboard}
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1445710863'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function ClipboardList}
+                          ^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '380925583'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function UtensilsCrossed}
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1957281743'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Grid3x3}
+                          ^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1426286671'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function ScanLine}
+                          ^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '2263210479'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function CalendarClock}
+                          ^^^^^^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '2350161359'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Users}
+                          ^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '1332341391'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function History}
+                          ^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '4242161039'
+}
+⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Settings}
+                          ^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>) {
+  digest: '2374334383'
+}
+[browser] Uncaught Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Settings}
+                          ^^^^^^^^^^^^^^^^^
+    at stringify (<anonymous>:1:18)
+    at resolveErrorDev (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:1919:105)
+    at processFullStringRow (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2434:29)
+    at processFullBinaryRow (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2393:9)
+    at processBinaryChunk (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2502:221)
+    at progress (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2689:13)
+[browser] Base UI: A component is changing the default value state of an uncontrolled FieldControl after being initialized. To suppress this warning opt to use a controlled FieldControl. 
+    at error (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_0nqagzx._.js:5980:21)
+    at useControlled.useEffect (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_0nqagzx._.js:9028:187)
+    at Object.react_stack_bottom_frame (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15087:22)
+    at runWithFiberInDEV (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at commitHookEffectListMount (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:7255:167)
+    at commitHookPassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:7290:60)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8689:33)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8750:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8750:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8750:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8750:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8750:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8750:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8750:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8750:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8750:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8750:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8750:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316)
+    at commitPassiveMountOnFiber (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8688:17)
+    at recursivelyTraversePassiveMountEffects (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:8676:316) (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_0nqagzx._.js:5980:21)
+[browser] Uncaught Error: Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <SegmentViewNode type="page" pagePath="waiter/pag...">
+      <SegmentTrieNode>
+      <WaiterPage>
+        <WaiterDashboard profile={{id:"5d7a84...", ...}}>
+          ...
+            <div className="flex min-w...">
+              <header>
+              <main className="flex-1 px-...">
+                <div className="space-y-6">
+                  <div>
+                  <div>
+                  <Card>
+                    <div data-slot="card" data-size="default" className={"group/ca..."}>
+                      <CardHeader>
+                      <CardContent>
+                        <div data-slot="card-content" className="px-(--card...">
+                          <div className="space-y-3">
+                            <div className="flex items...">
+                              <div>
+                              <div>
+                              <div className="text-right">
+                                <Badge variant="outline">
+                                  <span
+                                    data-slot="badge"
+                                    data-variant="outline"
+                                    className={"group/badge inline-flex h-5 w-fit shrink-0 items-center justify-cente..."}
+                                    ref={null}
+                                  >
++                                   2:32 AM
+-                                   2:30 AM
+                            ...
+                  ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at throwOnHydrationMismatch (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3318:56)
+    at prepareToHydrateHostInstance (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3372:23)
+    at completeWork (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6922:60)
+    at runWithFiberInDEV (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at completeUnitOfWork (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9622:23)
+    at performUnitOfWork (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9557:28)
+    at workLoopConcurrentByScheduler (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at span (<anonymous>)
+    at renderTag (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_0wqfesd._.js:7132:200)
+    at evaluateRenderProp (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_0wqfesd._.js:7097:20)
+    at useRenderElement (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_0wqfesd._.js:7001:12)
+    at useRender (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/node_modules_0wqfesd._.js:17764:213)
+    at Badge (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/_05g-seu._.js:1350:203)
+    at <unknown> (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/_05g-seu._.js:1822:261)
+    at Array.map (<anonymous>)
+    at WaiterDashboard (file://C:/Users/Administrator/Documents/GITHUB PROJECTS/vo restaurant-management-system/.next/dev/static/chunks/_05g-seu._.js:1759:62)
+    at WaiterPage (app\waiter\page.tsx:10:10)
+   8 |   if (profile.role !== "waiter") redirect("/")
+   9 |
+> 10 |   return <WaiterDashboard profile={profile} />
+     |          ^
+  11 | }
