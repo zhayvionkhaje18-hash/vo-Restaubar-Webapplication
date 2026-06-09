@@ -149,3 +149,12 @@
  GET /waiter/notifications 404 in 312ms (next.js: 9ms, proxy.ts: 267ms, application-code: 36ms)
  GET /waiter/notifications 404 in 453ms (next.js: 13ms, proxy.ts: 192ms, application-code: 248ms)
  GET /waiter 200 in 694ms (next.js: 29ms, proxy.ts: 186ms, application-code: 480ms)
+ GET /login 200 in 58ms (next.js: 8ms, proxy.ts: 9ms, application-code: 40ms)
+ POST /waiter 303 in 626ms (next.js: 7ms, proxy.ts: 329ms, application-code: 289ms)
+  └─ ƒ signOut() in 203ms app/actions/auth.ts
+ GET /admin 200 in 1343ms (next.js: 11ms, proxy.ts: 263ms, application-code: 1068ms)
+ GET /admin 200 in 1419ms (next.js: 103ms, proxy.ts: 265ms, application-code: 1051ms)
+ GET /admin/tables 200 in 841ms (next.js: 4ms, proxy.ts: 182ms, application-code: 654ms)
+ POST /admin/tables 200 in 1229ms (next.js: 4ms, proxy.ts: 277ms, application-code: 948ms)
+  └─ ƒ updateTableStatusAction("c05aa64f-ead1-405f-9c56-4e22c105617d", "occupied") in 208ms app/actions/admin.ts
+ GET /admin/tables 200 in 932ms (next.js: 5ms, proxy.ts: 262ms, application-code: 665ms)
