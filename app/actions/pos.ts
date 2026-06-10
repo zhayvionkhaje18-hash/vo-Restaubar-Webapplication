@@ -308,6 +308,7 @@ export async function getPosReceipts() {
 // ============================================================
 export async function getReceiptDetails(receiptId: string) {
   const supabase = await createClient()
+  const profile = await getSessionProfile()
 
   // Fetch receipt with full order and payment details
   const { data: receipt, error: receiptErr } = await supabase
@@ -323,14 +324,12 @@ export async function getReceiptDetails(receiptId: string) {
         notes,
         created_at,
         tables(label, zone),
-        order_items(name, quantity, unit_price),
-        created_by:profiles!orders_created_by_fkey(full_name)
+        order_items(name, quantity, unit_price)
       ),
       payments(
         method,
         amount_tendered,
-        change_due,
-        processed_by:profiles!payments_processed_by_fkey(full_name)
+        change_due
       )
     `
     )
@@ -347,6 +346,12 @@ export async function getReceiptDetails(receiptId: string) {
     .eq("id", 1)
     .maybeSingle()
 
+  // Get cashier name from the current session (the POS user who processed payment)
+  const cashierName =
+    profile?.full_name?.trim() ||
+    profile?.email?.split("@")[0] ||
+    "Cashier"
+
   return {
     receipt: {
       ...receipt,
@@ -361,7 +366,7 @@ export async function getReceiptDetails(receiptId: string) {
         currency: "₱",
         receipt_footer: null,
       },
-      cashier_name: receipt.payments?.[0]?.processed_by?.full_name ?? "—",
+      cashier_name: cashierName,
       order_items: receipt.orders?.order_items ?? [],
     },
   }

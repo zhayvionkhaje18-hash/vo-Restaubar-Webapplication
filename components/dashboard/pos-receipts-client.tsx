@@ -107,13 +107,23 @@ export function PosReceiptsClient({
 
   const handlePrint = () => {
     if (!receiptPrintRef.current) return
-    // Temporarily remove background for print-friendly output
-    const el = receiptPrintRef.current
-    const origBg = el.style.backgroundColor
-    el.style.backgroundColor = "#ffffff"
+
+    // Clone receipt into a hidden container so print only shows the receipt
+    const printContainer = document.createElement("div")
+    printContainer.id = "receipt-hidden-print"
+    printContainer.style.cssText =
+      "position:fixed;top:-9999px;left:-9999px;width:280px;background:#fff;color:#111;font-family:'Courier New',monospace;padding:20px 16px;box-sizing:border-box;"
+
+    const clone = receiptPrintRef.current.cloneNode(true) as HTMLElement
+    printContainer.appendChild(clone)
+    document.body.appendChild(printContainer)
+
     window.print()
-    // Restore after print dialog closes
-    el.style.backgroundColor = origBg
+
+    // Clean up after print dialog closes
+    setTimeout(() => {
+      printContainer.remove()
+    }, 500)
   }
 
   const handleDownloadImage = async () => {
@@ -146,25 +156,6 @@ export function PosReceiptsClient({
 
   return (
     <>
-      {/* Print stylesheet: when printing, show only the receipt content, strip all UI */}
-      <style>{`
-        @media print {
-          body > * { display: none !important; }
-          #receipt-print-root { display: block !important; }
-          #receipt-print-root * { visibility: visible; }
-          #receipt-print-root {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-          }
-          @page {
-            margin: 0;
-            size: 80mm 200mm; /* width x height — height auto-adjusts per content */
-          }
-        }
-      `}</style>
-
       <StaffShell profile={profile} items={NAV_ITEMS} title="Receipts">
         {/* Stats */}
         <div className="grid gap-4 sm:grid-cols-3 mb-6">
