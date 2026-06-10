@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import {
   Activity,
   ChevronDown,
@@ -272,9 +272,9 @@ export function ActivityManager({ logs }: { logs: ActivityLog[] }) {
                               )}
                             </button>
                             {isOpen && log.detail && (
-                              <pre className="mt-3 ml-10 max-h-64 overflow-auto rounded-md border bg-muted/30 p-3 text-xs">
-                                {prettyJson(log.detail)}
-                              </pre>
+                              <div className="mt-3 ml-10 max-h-64 overflow-auto rounded-md border bg-muted/30 p-3 text-sm">
+                                {formatDetail(log.entity ?? "", log.action ?? "", log.detail)}
+                              </div>
                             )}
                           </li>
                         )
@@ -291,11 +291,72 @@ export function ActivityManager({ logs }: { logs: ActivityLog[] }) {
   )
 }
 
-function prettyJson(detail: string) {
-  try {
-    const parsed = JSON.parse(detail)
-    return JSON.stringify(parsed, null, 2)
-  } catch {
-    return detail
+function formatDetail(entity: string, action: string, detail: unknown): React.ReactNode {
+  if (typeof detail !== "object" || detail === null) {
+    return <span className="text-muted-foreground">{String(detail ?? "")}</span>
   }
+
+  const data = detail as Record<string, unknown>
+
+  // Build human-readable summary based on entity + action
+  const parts: string[] = []
+
+  // Entity-specific readable labels
+  if (entity === "table") {
+    if (data.label) parts.push(`Table **${data.label}**`)
+    if (data.capacity) parts.push(`Capacity: ${data.capacity}`)
+    if (data.status) parts.push(`Status: ${data.status}`)
+  } else if (entity === "menu_item") {
+    if (data.name) parts.push(`Item **${data.name}**`)
+    if (data.price !== undefined) parts.push(`Price: ₱${Number(data.price).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`)
+    if (data.category) parts.push(`Category: ${data.category}`)
+  } else if (entity === "category") {
+    if (data.name) parts.push(`Category **${data.name}**`)
+    if (data.type) parts.push(`Type: ${data.type}`)
+  } else if (entity === "order") {
+    if (data.order_number) parts.push(`Order #**${data.order_number}**`)
+    if (data.table_label) parts.push(`Table: ${data.table_label}`)
+    if (data.total) parts.push(`Total: ₱${Number(data.total).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`)
+  } else if (entity === "payment") {
+    if (data.amount) parts.push(`Amount: ₱${Number(data.amount).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`)
+    if (data.method) parts.push(`Method: ${data.method}`)
+    if (data.reference) parts.push(`Ref: ${data.reference}`)
+  } else if (entity === "profile") {
+    if (data.full_name) parts.push(`Name: **${data.full_name}**`)
+    if (data.email) parts.push(`Email: ${data.email}`)
+    if (data.role) parts.push(`Role: ${data.role}`)
+  } else if (entity === "reservation") {
+    if (data.customer_name) parts.push(`Customer: **${data.customer_name}**`)
+    if (data.date) parts.push(`Date: ${data.date}`)
+    if (data.guests) parts.push(`Guests: ${data.guests}`)
+  } else {
+    // Generic: show key fields
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== null && value !== undefined && value !== "") {
+        const label = key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+        const display = typeof value === "number" ? value.toLocaleString("en-PH") : String(value)
+        parts.push(`${label}: **${display}**`)
+      }
+    }
+  }
+
+  if (parts.length === 0) {
+    return <span className="text-muted-foreground">No additional details</span>
+  }
+
+  // Parse markdown-style **bold** to proper JSX
+  return (
+    <div className="space-y-1">
+      {parts.map((part, i) => (
+        <div key={i}>
+          {part.split(/(\*\*[^*]+\*\*)/).map((segment, j) => {
+            if (segment.startsWith("**") && segment.endsWith("**")) {
+              return <strong key={j} className="font-medium">{segment.slice(2, -2)}</strong>
+            }
+            return <span key={j}>{segment}</span>
+          })}
+        </div>
+      ))}
+    </div>
+  )
 }

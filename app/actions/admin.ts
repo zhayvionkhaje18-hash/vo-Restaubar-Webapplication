@@ -358,12 +358,13 @@ export async function updateStaffAction(id: string, formData: FormData) {
   const supabase = await createClient()
   const full_name = (formData.get("full_name") as string) || null
   const phone = (formData.get("phone") as string) || null
+  const address = (formData.get("address") as string) || null
   const role = formData.get("role") as string
   const is_active = formData.get("is_active") === "true"
 
   const { error } = await supabase
     .from("profiles")
-    .update({ full_name, phone, role, is_active })
+    .update({ full_name, phone, address, role, is_active })
     .eq("id", id)
   if (error) return { error: error.message }
   await supabase.rpc("log_activity", { p_action: "staff.updated", p_entity: "profile", p_entity_id: id })
@@ -374,6 +375,76 @@ export async function updateStaffAction(id: string, formData: FormData) {
 export async function toggleStaffStatusAction(id: string, is_active: boolean) {
   const supabase = await createClient()
   const { error } = await supabase.from("profiles").update({ is_active }).eq("id", id)
+  if (error) return { error: error.message }
+  revalidatePath("/admin/staff")
+  return { success: true }
+}
+
+// ============================================================
+// STAFF INVITATIONS
+// ============================================================
+export async function createStaffInviteAction(formData: FormData) {
+  const supabase = await createClient()
+
+  const email = ((formData.get("email") as string) || "").trim().toLowerCase()
+  const full_name = ((formData.get("full_name") as string) || "").trim() || null
+  const phone = ((formData.get("phone") as string) || "").trim() || null
+  const address = ((formData.get("address") as string) || "").trim() || null
+  const role = (formData.get("role") as string) || "waiter"
+
+  if (!email) return { error: "Email is required" }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Invalid email address" }
+  if (!["admin", "pos", "waiter"].includes(role)) return { error: "Invalid role" }
+
+  // Check if email already has an account
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle()
+  if (existing) return { error: "A staff member with this email already exists" }
+
+  // Check if there's a pending invitation
+  const { data: pending } = await supabase
+    .from("staff_invitations")
+    .select("id")
+    .eq("email", email)
+    .is("accepted_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle()
+  if (pending) return { error: "An invitation for this email is already pending" }
+
+  // Get current user (invited_by)
+  const { data: { user } } = await supabase.auth.getUser()
+  const invited_by = user?.id ?? null
+
+  const { error } = await supabase.from("staff_invitations").insert({
+    email,
+    full_name,
+    phone,
+    address,
+    role,
+    invited_by,
+  })
+  if (error) return { error: error.message }
+
+  // TODO: Send invite email via Supabase Edge Function (placeholder for now)
+  await supabase.rpc("log_activity", {
+    p_action: "staff.invited",
+    p_entity: "staff_invitation",
+    p_entity_id: null,
+  })
+  revalidatePath("/admin/staff")
+  return { success: true }
+}
+
+export async function cancelStaffInviteAction(inviteId: string) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from("staff_invitations")
+    .delete()
+    .eq("id", inviteId)
+    .is("accepted_at", null)
   if (error) return { error: error.message }
   revalidatePath("/admin/staff")
   return { success: true }

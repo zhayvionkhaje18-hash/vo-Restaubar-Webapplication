@@ -5,11 +5,25 @@ export type PaymentStatus = "unpaid" | "pending" | "paid" | "refunded"
 export type PaymentMethod = "cash" | "card" | "gcash" | "maya" | "other"
 export type ReservationStatus = "pending" | "confirmed" | "seated" | "completed" | "cancelled" | "no_show"
 
+export interface StaffInvitation {
+  id: string
+  email: string
+  full_name: string | null
+  phone: string | null
+  address: string | null
+  role: UserRole
+  invited_by: string | null
+  accepted_at: string | null
+  expires_at: string
+  created_at: string
+}
+
 export interface Profile {
   id: string
   full_name: string | null
   email: string | null
   phone: string | null
+  address: string | null
   role: UserRole
   avatar_url: string | null
   is_active: boolean

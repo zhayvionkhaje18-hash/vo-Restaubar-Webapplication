@@ -8,11 +8,14 @@ import {
   Mail,
   MoreVertical,
   Phone,
+  Plus,
   Search,
   ShieldCheck,
   UserCheck,
+  UserPlus,
   UserX,
   Users,
+  X,
 } from "lucide-react"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent } from "@/components/ui/card"
@@ -45,7 +48,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ROLE_LABELS, relativeTime } from "@/lib/constants"
 import type { Profile, UserRole } from "@/lib/types"
-import { updateStaffAction, toggleStaffStatusAction } from "@/app/actions/admin"
+import { updateStaffAction, toggleStaffStatusAction, createStaffInviteAction, cancelStaffInviteAction } from "@/app/actions/admin"
 
 type StaffWithTables = Profile & { assigned_tables: string[] }
 
@@ -76,6 +79,7 @@ export function StaffManager({
     open: false,
     staff: null,
   })
+  const [addDialog, setAddDialog] = useState<{ open: boolean }>({ open: false })
 
   const filtered = useMemo(() => {
     return staff.filter((s) => {
@@ -117,6 +121,12 @@ export function StaffManager({
         title="Staff Management"
         description={`${stats.total} members • ${stats.active} active • ${stats.inactive} inactive`}
         crumbs={[{ label: "Admin", href: "/admin" }, { label: "Staff" }]}
+        actions={
+          <Button onClick={() => setAddDialog({ open: true })}>
+            <UserPlus className="mr-2 size-4" />
+            Add Staff
+          </Button>
+        }
       />
 
       {/* Role summary */}
@@ -292,11 +302,22 @@ export function StaffManager({
 
       {/* Edit dialog */}
       <StaffEditDialog
+        key={editDialog.staff?.id ?? "new"}
         open={editDialog.open}
         staff={editDialog.staff}
         onClose={() => setEditDialog({ open: false, staff: null })}
         onSaved={() => {
           setEditDialog({ open: false, staff: null })
+          router.refresh()
+        }}
+      />
+
+      {/* Add Staff dialog */}
+      <AddStaffDialog
+        open={addDialog.open}
+        onClose={() => setAddDialog({ open: false })}
+        onSaved={() => {
+          setAddDialog({ open: false })
           router.refresh()
         }}
       />
@@ -377,13 +398,19 @@ function StaffEditDialog({
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" name="phone" defaultValue={staff.phone ?? ""} />
+                <Input id="phone" name="phone" type="tel" defaultValue={staff.phone ?? ""} />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="address">Address</Label>
+                <Input id="address" name="address" defaultValue={(staff as any).address ?? ""} placeholder="Street, City, Province" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="role-select">Role</Label>
                 <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
                   <SelectTrigger id="role-select" className="w-full">
-                    <SelectValue />
+                    <SelectValue>
+                      {ROLE_LABELS[role]}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Administrator</SelectItem>
@@ -423,6 +450,134 @@ function StaffEditDialog({
             </DialogFooter>
           </form>
         )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ============================================================
+// Add Staff dialog
+// ============================================================
+function AddStaffDialog({
+  open,
+  onClose,
+  onSaved,
+}: {
+  open: boolean
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [pending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+  const [selectedRole, setSelectedRole] = useState<UserRole>("waiter")
+
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError(null)
+    const fd = new FormData(e.currentTarget)
+    fd.set("role", selectedRole)
+    startTransition(async () => {
+      const result = await createStaffInviteAction(fd)
+      if (result?.error) {
+        setError(result.error)
+        return
+      }
+      onSaved()
+    })
+  }
+
+  const handleClose = () => {
+    if (!pending) {
+      setError(null)
+      setSelectedRole("waiter")
+      onClose()
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Staff Member</DialogTitle>
+          <DialogDescription>
+            Send an invitation to a new team member. They&apos;ll receive an email to join.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="add_full_name">Full name</Label>
+              <Input
+                id="add_full_name"
+                name="full_name"
+                placeholder="Juan dela Cruz"
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="add_email">Email address</Label>
+              <Input
+                id="add_email"
+                name="email"
+                type="email"
+                placeholder="juan@restaurant.com"
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="add_phone">Phone number</Label>
+              <Input
+                id="add_phone"
+                name="phone"
+                type="tel"
+                placeholder="+63 9XX XXX XXXX"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="add_role">Role</Label>
+              <Select
+                value={selectedRole}
+                onValueChange={(v) => setSelectedRole(v as UserRole)}
+              >
+                <SelectTrigger id="add_role" className="w-full">
+                  <SelectValue>{ROLE_LABELS[selectedRole]}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pos">POS Cashier</SelectItem>
+                  <SelectItem value="waiter">Waiter</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="add_address">Address</Label>
+              <Input
+                id="add_address"
+                name="address"
+                placeholder="Street, City, Province"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
+            <strong>How it works:</strong> An invitation record will be created. The staff member must sign up on the login page using this email address — their profile will be automatically filled with the details above.
+          </div>
+
+          {error && (
+            <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={pending}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={pending}>
+              <Plus className="mr-2 size-4" />
+              {pending ? "Sending invite..." : "Send Invite"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
