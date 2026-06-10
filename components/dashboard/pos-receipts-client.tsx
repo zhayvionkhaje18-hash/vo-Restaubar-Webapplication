@@ -1,17 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition, useRef } from "react"
+import html2canvas from "html2canvas"
 import {
   Download,
   ExternalLink,
+  Printer,
   Receipt,
   RefreshCw,
   Search,
+  Loader2,
+  FileImage,
 } from "lucide-react"
 import { StaffShell, type NavItem } from "@/components/staff-shell"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
   Dialog,
@@ -21,7 +24,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { formatCurrency, formatDateTime } from "@/lib/constants"
-import type { Profile, Receipt } from "@/lib/types"
+import type { Profile } from "@/lib/types"
+import { getReceiptDetails } from "@/app/actions/pos"
+import { ReceiptPrint, type ReceiptDetails } from "@/components/receipt/receipt-print"
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/pos", label: "POS Terminal", icon: "LayoutDashboard" },
@@ -29,11 +34,29 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/pos/receipts", label: "Receipts", icon: "Receipt" },
 ]
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ReceiptWithOrder = Receipt & { orders: any }
+type ReceiptWithOrder = {
+  id: string
+  receipt_number: string
+  pdf_url: string | null
+  image_url: string | null
+  total: number
+  subtotal: number
+  tax: number
+  created_at: string
+  orders: {
+    order_number: number
+    total: number
+    subtotal: number
+    tax: number
+    created_at: string
+    tables?: { label: string | null; zone: string | null } | null
+  } | null
+}
 
-interface ReceiptDetail extends ReceiptWithOrder {
-  order_items?: { name: string; quantity: number; unit_price: number }[]
+interface PayDialog {
+  open: boolean
+  method: "cash" | "card" | "gcash" | "maya"
+  amountTendered: string
 }
 
 export function PosReceiptsClient({
@@ -43,8 +66,13 @@ export function PosReceiptsClient({
   profile: Profile
   initialReceipts: ReceiptWithOrder[]
 }) {
+  const [pending, startTransition] = useTransition()
   const [search, setSearch] = useState("")
-  const [selected, setSelected] = useState<ReceiptDetail | null>(null)
+  const [selected, setSelected] = useState<ReceiptWithOrder | null>(null)
+  const [fullReceipt, setFullReceipt] = useState<ReceiptDetails | null>(null)
+  const [loadingDetails, setLoadingDetails] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const receiptRef = useRef<HTMLDivElement>(null)
 
   const filtered = initialReceipts.filter((r) => {
     if (!search) return true
@@ -64,164 +92,276 @@ export function PosReceiptsClient({
     revenue: filtered.reduce((sum, r) => sum + Number(r.total), 0),
   }
 
+  const handleViewReceipt = (receipt: ReceiptWithOrder) => {
+    setSelected(receipt)
+    setFullReceipt(null)
+    setLoadingDetails(true)
+
+    startTransition(async () => {
+      const result = await getReceiptDetails(receipt.id)
+      setLoadingDetails(false)
+      if (result?.error) {
+        alert("Failed to load receipt: " + result.error)
+        return
+      }
+      if (result?.receipt) {
+        setFullReceipt(result.receipt as ReceiptDetails)
+      }
+    })
+  }
+
+  const handlePrint = () => {
+    window.print()
+  }
+
+  const handleDownloadImage = async () => {
+    if (!receiptRef.current) return
+    setDownloading(true)
+    try {
+      const canvas = await html2canvas(receiptRef.current, {
+        scale: 3,
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        logging: false,
+      })
+      const link = document.createElement("a")
+      link.download = `${fullReceipt?.receipt_number ?? "receipt"}-${Date.now()}.png`
+      link.href = canvas.toDataURL("image/png")
+      link.click()
+    } catch (err) {
+      console.error("Failed to generate image", err)
+      alert("Failed to generate image. Please try again.")
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   return (
-    <StaffShell profile={profile} items={NAV_ITEMS} title="Receipts">
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3 mb-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">Total Receipts</div>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">Today's Revenue</div>
-            <div className="text-2xl font-bold text-primary">
-              {formatCurrency(stats.todayTotal)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">All-Time Revenue</div>
-            <div className="text-2xl font-bold text-primary">
-              {formatCurrency(stats.revenue)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+    <>
+      {/* Print-only stylesheet: show only the receipt */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #receipt-print-target,
+          #receipt-print-target * { visibility: visible; }
+          #receipt-print-target {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+          }
+          @page { margin: 0; size: 80mm auto; }
+        }
+      `}</style>
 
-      {/* Search */}
-      <div className="mb-4 flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search by receipt #..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+      <StaffShell profile={profile} items={NAV_ITEMS} title="Receipts">
+        {/* Stats */}
+        <div className="grid gap-4 sm:grid-cols-3 mb-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-sm text-muted-foreground">Total Receipts</div>
+              <div className="text-2xl font-bold">{stats.total}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-sm text-muted-foreground">Today&apos;s Revenue</div>
+              <div className="text-2xl font-bold text-primary">
+                {formatCurrency(stats.todayTotal)}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-sm text-muted-foreground">All-Time Revenue</div>
+              <div className="text-2xl font-bold text-primary">
+                {formatCurrency(stats.revenue)}
+              </div>
+            </CardContent>
+          </Card>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => window.location.reload()}
-        >
-          <RefreshCw className="size-3.5" />
-          <span className="ml-1.5">Refresh</span>
-        </Button>
-      </div>
 
-      {/* Receipt list */}
-      {filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed py-16 text-center text-muted-foreground">
-          <Receipt className="mx-auto mb-3 size-8 opacity-40" />
-          <p>No receipts found.</p>
+        {/* Search */}
+        <div className="mb-4 flex items-center gap-3">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search by receipt #..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+            <RefreshCw className="size-3.5" />
+            <span className="ml-1.5">Refresh</span>
+          </Button>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((receipt) => (
-            <Card
-              key={receipt.id}
-              className="cursor-pointer transition-colors hover:bg-muted/30"
-              onClick={() => setSelected(receipt)}
-            >
-              <CardContent className="flex items-center justify-between py-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex size-10 items-center justify-center rounded-full bg-muted">
-                    <Receipt className="size-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <div className="font-medium">{receipt.receipt_number}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {receipt.orders?.tables?.label
-                        ? `Table ${receipt.orders.tables.label}`
-                        : "No table"}
-                      {" • "}
-                      {formatDateTime(receipt.created_at)}
+
+        {/* Receipt list */}
+        {filtered.length === 0 ? (
+          <div className="rounded-lg border border-dashed py-16 text-center text-muted-foreground">
+            <Receipt className="mx-auto mb-3 size-8 opacity-40" />
+            <p>No receipts found.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((receipt) => (
+              <Card
+                key={receipt.id}
+                className="cursor-pointer transition-colors hover:bg-muted/30"
+                onClick={() => handleViewReceipt(receipt)}
+              >
+                <CardContent className="flex items-center justify-between py-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex size-10 items-center justify-center rounded-full bg-muted">
+                      <Receipt className="size-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <div className="font-medium">{receipt.receipt_number}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {receipt.orders?.tables?.label
+                          ? `Table ${receipt.orders.tables.label}`
+                          : "No table"}
+                        {" • "}
+                        {formatDateTime(receipt.created_at)}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-lg font-semibold text-primary">
-                    {formatCurrency(Number(receipt.total))}
+                  <div className="text-right">
+                    <div className="text-lg font-semibold text-primary">
+                      {formatCurrency(Number(receipt.total))}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Subtotal: {formatCurrency(Number(receipt.subtotal))} • Tax:{" "}
+                      {formatCurrency(Number(receipt.tax))}
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Subtotal: {formatCurrency(Number(receipt.subtotal))} • Tax:{" "}
-                    {formatCurrency(Number(receipt.tax))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </StaffShell>
 
-      {/* Receipt Detail Dialog */}
-      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Receipt #{selected?.receipt_number}</DialogTitle>
+      {/* Receipt Preview Dialog */}
+      <Dialog
+        open={!!selected}
+        onOpenChange={(o) => {
+          if (!o) {
+            setSelected(null)
+            setFullReceipt(null)
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg w-full overflow-y-auto max-h-[90vh]">
+          <DialogHeader className="space-y-1">
+            <DialogTitle className="text-base">
+              Receipt #{selected?.receipt_number}
+            </DialogTitle>
+            {selected && (
+              <div className="text-sm text-muted-foreground">
+                {selected.orders?.tables?.label
+                  ? `Table ${selected.orders.tables.label}`
+                  : "Walk-in"}
+                {" • "}
+                {formatDateTime(selected.created_at)}
+              </div>
+            )}
           </DialogHeader>
+
+          {/* Receipt Preview Area */}
+          <div className="flex justify-center bg-muted/20 rounded-lg p-4">
+            {loadingDetails ? (
+              <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
+                <Loader2 className="size-6 animate-spin" />
+                <span className="text-sm">Loading receipt...</span>
+              </div>
+            ) : fullReceipt ? (
+              <div
+                id="receipt-print-target"
+                ref={receiptRef}
+                className="flex justify-center"
+              >
+                <ReceiptPrint receipt={fullReceipt} />
+              </div>
+            ) : (
+              <div className="py-8 text-sm text-muted-foreground">
+                Unable to load receipt details.
+              </div>
+            )}
+          </div>
+
+          {/* Summary */}
           {selected && (
-            <div className="space-y-4">
-              {selected.orders?.tables && (
-                <div className="rounded-lg bg-muted/30 p-3">
-                  <div className="text-sm text-muted-foreground">Table</div>
-                  <div className="font-medium">{selected.orders.tables.label}</div>
-                </div>
-              )}
-
-              <div className="space-y-2 border-t pt-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>{formatCurrency(Number(selected.subtotal))}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax</span>
-                  <span>{formatCurrency(Number(selected.tax))}</span>
-                </div>
-                <div className="flex justify-between border-t pt-2 font-semibold text-base">
-                  <span>Total</span>
-                  <span className="text-primary">{formatCurrency(Number(selected.total))}</span>
-                </div>
+            <div className="border rounded-lg p-3 space-y-1.5 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>{formatCurrency(Number(selected.subtotal))}</span>
               </div>
-
-              <div className="text-xs text-muted-foreground">
-                Issued: {formatDateTime(selected.created_at)}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Tax</span>
+                <span>{formatCurrency(Number(selected.tax))}</span>
               </div>
-
-              {selected.pdf_url && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  asChild
-                >
-                  <a href={selected.pdf_url} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="size-3.5" />
-                    <span className="ml-1.5">View PDF</span>
-                  </a>
-                </Button>
-              )}
+              <div className="flex justify-between font-semibold border-t pt-1.5">
+                <span>Total</span>
+                <span className="text-primary">{formatCurrency(Number(selected.total))}</span>
+              </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelected(null)}>
-              Close
+
+          <DialogFooter className="flex-wrap gap-2 sm:gap-0">
+            {/* Print */}
+            <Button
+              variant="outline"
+              onClick={handlePrint}
+              disabled={!fullReceipt}
+            >
+              <Printer className="size-3.5" />
+              <span className="ml-1.5">Print</span>
             </Button>
+
+            {/* Download Image */}
+            <Button
+              variant="outline"
+              onClick={handleDownloadImage}
+              disabled={!fullReceipt || downloading}
+            >
+              {downloading ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <FileImage className="size-3.5" />
+              )}
+              <span className="ml-1.5">{downloading ? "Generating..." : "Download Image"}</span>
+            </Button>
+
+            {/* View PDF */}
+            {selected?.pdf_url && (
+              <Button variant="outline" asChild>
+                <a href={selected.pdf_url} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="size-3.5" />
+                  <span className="ml-1.5">View PDF</span>
+                </a>
+              </Button>
+            )}
+
+            {/* Download PDF */}
             {selected?.pdf_url && (
               <Button asChild>
                 <a href={selected.pdf_url} download>
                   <Download className="size-3.5" />
-                  <span className="ml-1.5">Download</span>
+                  <span className="ml-1.5">Download PDF</span>
                 </a>
               </Button>
             )}
+
+            {/* Close */}
+            <Button variant="ghost" onClick={() => { setSelected(null); setFullReceipt(null) }}>
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </StaffShell>
+    </>
   )
 }

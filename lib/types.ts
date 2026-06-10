@@ -128,6 +128,8 @@ export interface Receipt {
   receipt_number: string
   pdf_url: string | null
   image_url: string | null
+  subtotal: number
+  tax: number
   total: number
   created_at: string
 }

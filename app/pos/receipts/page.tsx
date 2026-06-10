@@ -35,5 +35,12 @@ export default async function PosReceiptsPage() {
     .order("created_at", { ascending: false })
     .limit(100)
 
-  return <PosReceiptsClient profile={profile} initialReceipts={receipts ?? []} />
+  // Ensure subtotal/tax default to 0 if null
+  const sanitized = (receipts ?? []).map((r) => ({
+    ...r,
+    subtotal: r.subtotal ?? 0,
+    tax: r.tax ?? 0,
+  }))
+
+  return <PosReceiptsClient profile={profile} initialReceipts={sanitized} />
 }

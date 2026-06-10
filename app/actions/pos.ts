@@ -302,3 +302,67 @@ export async function getPosReceipts() {
   if (error) return { error: error.message }
   return { receipts: data }
 }
+
+// ============================================================
+// GET RECEIPT DETAILS (full data for print/download)
+// ============================================================
+export async function getReceiptDetails(receiptId: string) {
+  const supabase = await createClient()
+
+  // Fetch receipt with full order and payment details
+  const { data: receipt, error: receiptErr } = await supabase
+    .from("receipts")
+    .select(
+      `
+      *,
+      orders(
+        order_number,
+        subtotal,
+        tax,
+        total,
+        notes,
+        created_at,
+        tables(label, zone),
+        order_items(name, quantity, unit_price),
+        created_by:profiles!orders_created_by_fkey(full_name)
+      ),
+      payments(
+        method,
+        amount_tendered,
+        change_due,
+        processed_by:profiles!payments_processed_by_fkey(full_name)
+      )
+    `
+    )
+    .eq("id", receiptId)
+    .single()
+
+  if (receiptErr) return { error: receiptErr.message }
+  if (!receipt) return { error: "Receipt not found" }
+
+  // Fetch restaurant settings for branding
+  const { data: settings } = await supabase
+    .from("restaurant_settings")
+    .select("*")
+    .eq("id", 1)
+    .maybeSingle()
+
+  return {
+    receipt: {
+      ...receipt,
+      restaurant: settings ?? {
+        name: "Restaurant",
+        tagline: null,
+        address: null,
+        phone: null,
+        email: null,
+        tin: null,
+        logo_url: null,
+        currency: "₱",
+        receipt_footer: null,
+      },
+      cashier_name: receipt.payments?.[0]?.processed_by?.full_name ?? "—",
+      order_items: receipt.orders?.order_items ?? [],
+    },
+  }
+}
