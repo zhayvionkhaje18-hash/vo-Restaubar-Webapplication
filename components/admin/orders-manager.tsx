@@ -309,7 +309,7 @@ function OrderDetailDialog({
                 <Info label="Table" value={order.tables?.label ?? "Takeout"} />
                 <Info label="Customer" value={order.customer_name ?? "Walk-in"} />
                 <Info label="Payment" value={PAYMENT_STYLES[order.payment_status as PaymentStatus]?.label ?? order.payment_status} />
-                <Info label="Order #" value={`#${order.order_number.toString()}`} mono />
+                <Info label="Order #" value={order.order_number.toString().slice(-6)} mono />
               </div>
 
               <div>
