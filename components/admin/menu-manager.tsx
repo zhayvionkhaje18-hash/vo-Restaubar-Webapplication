@@ -190,7 +190,11 @@ export function MenuManager({
               </div>
               <Select value={categoryFilter} onValueChange={(v) => v && setCategoryFilter(v)}>
                 <SelectTrigger className="h-9 w-48">
-                  <SelectValue placeholder="Category" />
+                  <SelectValue>
+                    {categoryFilter === "all"
+                      ? "All categories"
+                      : categories.find((c) => c.id === categoryFilter)?.name ?? "Category"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All categories</SelectItem>
