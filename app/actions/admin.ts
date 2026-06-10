@@ -9,7 +9,7 @@ import type {
 } from "@/lib/types"
 import { TAX_RATE } from "@/lib/constants"
 
-const MENU_IMAGE_BUCKET = "menu-image"
+const MENU_IMAGE_BUCKET = "menu-images"
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5MB
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const
 

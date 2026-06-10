@@ -1,12 +1,11 @@
 -- ============================================================
--- MIGRATION 0002: menu-image storage bucket + RLS policies
+-- MIGRATION 0002: menu-images storage bucket RLS policies
 -- Lumière RestauBar Management System
 -- ============================================================
 -- Purpose:
---   1. Create the public "menu-image" bucket (5MB cap, image MIME types)
---   2. Allow admin/pos to upload and replace images
---   3. Allow public (anon) read so the customer menu and POS can render
---      the image URLs without going through a signed-URL flow.
+--   1. Use existing "menu-images" bucket (already created via schema.sql)
+--   2. Add stricter RLS policies: only admin/pos/waiter can upload
+--   3. Allow public read so customer menu and POS can render images
 --
 -- Where to run:
 --   Supabase Dashboard → SQL Editor → New query → paste → Run.
@@ -15,54 +14,37 @@
 
 
 -- ============================================================
--- 1. Bucket
--- ============================================================
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'menu-image',
-  'menu-image',
-  true,
-  5 * 1024 * 1024,           -- 5MB per object
-  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-)
-on conflict (id) do update
-  set public            = excluded.public,
-      file_size_limit   = excluded.file_size_limit,
-      allowed_mime_types = excluded.allowed_mime_types;
-
-
--- ============================================================
--- 2. Storage RLS policies
+-- 1. Storage RLS policies
 --    The storage.objects table is what every storage.* RLS policy
 --    reads against. The "name" column holds the object path, e.g.
 --    "menu/1749665123-abcd1234.jpg". We scope all policies to the
---    menu-image bucket and the "menu/" prefix.
+--    menu-images bucket.
 -- ============================================================
 
 -- Drop any old versions of these policies so re-running this file is safe.
-drop policy if exists "menu-image read public"        on storage.objects;
-drop policy if exists "menu-image insert staff"       on storage.objects;
-drop policy if exists "menu-image update staff"       on storage.objects;
-drop policy if exists "menu-image delete staff"       on storage.objects;
-drop policy if exists "Authenticated can read menu"   on storage.objects;
-drop policy if exists "Staff can upload menu images"  on storage.objects;
-drop policy if exists "Staff can update menu images"  on storage.objects;
-drop policy if exists "Staff can delete menu images"  on storage.objects;
+drop policy if exists "menu-images read public"        on storage.objects;
+drop policy if exists "menu-images insert staff"       on storage.objects;
+drop policy if exists "menu-images update staff"       on storage.objects;
+drop policy if exists "menu-images delete staff"       on storage.objects;
+drop policy if exists "Authenticated can read menu"    on storage.objects;
+drop policy if exists "Staff can upload menu images"   on storage.objects;
+drop policy if exists "Staff can update menu images"   on storage.objects;
+drop policy if exists "Staff can delete menu images"   on storage.objects;
 
 -- Public read (bucket is public anyway, but keep RLS in sync for clarity)
-create policy "menu-image read public"
+create policy "menu-images read public"
 on storage.objects
 for select
 to public
-using ( bucket_id = 'menu-image' );
+using ( bucket_id = 'menu-images' );
 
--- Authenticated staff (admin / pos / waiter) can upload to menu-image
-create policy "menu-image insert staff"
+-- Authenticated staff (admin / pos / waiter) can upload to menu-images
+create policy "menu-images insert staff"
 on storage.objects
 for insert
 to authenticated
 with check (
-  bucket_id = 'menu-image'
+  bucket_id = 'menu-images'
   and exists (
     select 1
     from public.profiles p
@@ -73,12 +55,12 @@ with check (
 );
 
 -- Authenticated staff can update/replace existing menu images
-create policy "menu-image update staff"
+create policy "menu-images update staff"
 on storage.objects
 for update
 to authenticated
 using (
-  bucket_id = 'menu-image'
+  bucket_id = 'menu-images'
   and exists (
     select 1
     from public.profiles p
@@ -88,7 +70,7 @@ using (
   )
 )
 with check (
-  bucket_id = 'menu-image'
+  bucket_id = 'menu-images'
   and exists (
     select 1
     from public.profiles p
@@ -99,12 +81,12 @@ with check (
 );
 
 -- Authenticated staff can delete menu images
-create policy "menu-image delete staff"
+create policy "menu-images delete staff"
 on storage.objects
 for delete
 to authenticated
 using (
-  bucket_id = 'menu-image'
+  bucket_id = 'menu-images'
   and exists (
     select 1
     from public.profiles p
@@ -116,7 +98,7 @@ using (
 
 
 -- ============================================================
--- 3. Reload PostgREST schema cache (so any future storage.RPC
+-- 2. Reload PostgREST schema cache (so any future storage.RPC
 --    you add is immediately visible to the JS client)
 -- ============================================================
 notify pgrst, 'reload schema';
