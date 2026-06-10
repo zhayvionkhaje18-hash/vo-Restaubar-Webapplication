@@ -612,7 +612,7 @@ async function uploadLogo(
 ): Promise<{ url?: string; error?: string }> {
   const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"]
   if (!allowed.includes(file.type)) return { error: "Logo must be JPG, PNG, WebP, or GIF" }
-  if (file.size > 2 * 1024 * 1024) return { error: "Logo too large (max 2MB)" }
+  if (file.size > 5 * 1024 * 1024) return { error: "Logo too large (max 5MB)" }
   if (file.size === 0) return { error: "Empty file" }
 
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase()

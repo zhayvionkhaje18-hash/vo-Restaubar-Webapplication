@@ -143,7 +143,7 @@ export function SettingsManager({ settings }: { settings: RestaurantSettings | n
                       }
                     }}
                   />
-                  <p className="text-xs text-muted-foreground">JPG, PNG, WebP or GIF (max 2MB)</p>
+                  <p className="text-xs text-muted-foreground">JPG, PNG, WebP or GIF (max 5MB)</p>
                 </div>
               </div>
             </div>
