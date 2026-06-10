@@ -9,6 +9,70 @@ import type {
 } from "@/lib/types"
 import { TAX_RATE } from "@/lib/constants"
 
+const MENU_IMAGE_BUCKET = "menu-image"
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5MB
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const
+
+/**
+ * Upload a menu item image to Supabase Storage.
+ * Returns the public URL on success, or { error } on failure.
+ */
+async function uploadMenuImage(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  file: File
+): Promise<{ url?: string; path?: string; error?: string }> {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type as (typeof ALLOWED_IMAGE_TYPES)[number])) {
+    return { error: "Image must be JPEG, PNG, WebP, or GIF" }
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return { error: `Image too large (max 5MB). Yours is ${(file.size / 1024 / 1024).toFixed(1)}MB.` }
+  }
+  if (file.size === 0) {
+    return { error: "Empty file" }
+  }
+
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "")
+  const safeExt = ["jpg", "jpeg", "png", "webp", "gif"].includes(ext) ? ext : "jpg"
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${safeExt}`
+  const path = `menu/${filename}`
+
+  const { error: uploadErr } = await supabase.storage
+    .from(MENU_IMAGE_BUCKET)
+    .upload(path, file, {
+      contentType: file.type,
+      cacheControl: "3600",
+      upsert: false,
+    })
+
+  if (uploadErr) {
+    return { error: `Upload failed: ${uploadErr.message}` }
+  }
+
+  const { data } = supabase.storage.from(MENU_IMAGE_BUCKET).getPublicUrl(path)
+  return { url: data.publicUrl, path }
+}
+
+/**
+ * Resolve the final image URL for a menu item form submission.
+ * Priority: uploaded file > existing image_url (string from hidden field) > null.
+ */
+async function resolveMenuImageUrl(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  formData: FormData,
+  previousUrl: string | null
+): Promise<{ url: string | null; error?: string }> {
+  const file = formData.get("image_file")
+  if (file instanceof File && file.size > 0) {
+    const result = await uploadMenuImage(supabase, file)
+    if (result.error) return { url: null, error: result.error }
+    return { url: result.url ?? null }
+  }
+  // No new file — keep previous URL (or whatever the form sent).
+  const incoming = formData.get("image_url")
+  const url = typeof incoming === "string" && incoming.trim().length > 0 ? incoming.trim() : null
+  return { url: url ?? previousUrl ?? null }
+}
+
 // ============================================================
 // CATEGORIES
 // ============================================================
@@ -73,15 +137,17 @@ export async function createMenuItemAction(formData: FormData) {
   const prep_minutes = parseInt((formData.get("prep_minutes") as string) || "15")
   const is_alcoholic = formData.get("is_alcoholic") === "on"
   const is_available = formData.get("is_available") === "on"
-  const image_url = (formData.get("image_url") as string) || null
 
   if (!name || isNaN(price)) return { error: "Name and price are required" }
+
+  const image = await resolveMenuImageUrl(supabase, formData, null)
+  if (image.error) return { error: image.error }
 
   const { data, error } = await supabase
     .from("menu_items")
     .insert({
       name, description, price, category_id, prep_minutes,
-      is_alcoholic, is_available, image_url,
+      is_alcoholic, is_available, image_url: image.url,
     })
     .select()
     .single()
@@ -99,6 +165,15 @@ export async function createMenuItemAction(formData: FormData) {
 
 export async function updateMenuItemAction(id: string, formData: FormData) {
   const supabase = await createClient()
+
+  // Fetch previous image URL so we can decide whether to delete the old object
+  const { data: existing } = await supabase
+    .from("menu_items")
+    .select("image_url")
+    .eq("id", id)
+    .single()
+  const previousUrl: string | null = (existing?.image_url as string | null) ?? null
+
   const name = formData.get("name") as string
   const description = (formData.get("description") as string) || null
   const price = parseFloat(formData.get("price") as string)
@@ -106,16 +181,34 @@ export async function updateMenuItemAction(id: string, formData: FormData) {
   const prep_minutes = parseInt((formData.get("prep_minutes") as string) || "15")
   const is_alcoholic = formData.get("is_alcoholic") === "on"
   const is_available = formData.get("is_available") === "on"
-  const image_url = (formData.get("image_url") as string) || null
+
+  const image = await resolveMenuImageUrl(supabase, formData, previousUrl)
+  if (image.error) return { error: image.error }
 
   const { error } = await supabase
     .from("menu_items")
     .update({
       name, description, price, category_id, prep_minutes,
-      is_alcoholic, is_available, image_url,
+      is_alcoholic, is_available, image_url: image.url,
     })
     .eq("id", id)
   if (error) return { error: error.message }
+
+  // Best-effort cleanup of the old object if it was replaced or removed
+  if (previousUrl && previousUrl !== image.url) {
+    try {
+      const marker = `/storage/v1/object/public/${MENU_IMAGE_BUCKET}/`
+      const idx = previousUrl.indexOf(marker)
+      if (idx !== -1) {
+        const oldPath = previousUrl.slice(idx + marker.length)
+        if (oldPath) {
+          await supabase.storage.from(MENU_IMAGE_BUCKET).remove([oldPath])
+        }
+      }
+    } catch {
+      // non-fatal — DB update already succeeded
+    }
+  }
 
   await supabase.rpc("log_activity", { p_action: "menu.updated", p_entity: "menu_item", p_entity_id: id })
   revalidatePath("/admin/menu")
@@ -124,8 +217,28 @@ export async function updateMenuItemAction(id: string, formData: FormData) {
 
 export async function deleteMenuItemAction(id: string) {
   const supabase = await createClient()
+  // Capture the image URL before we drop the row, so we can remove the object
+  const { data: existing } = await supabase
+    .from("menu_items")
+    .select("image_url")
+    .eq("id", id)
+    .single()
   const { error } = await supabase.from("menu_items").delete().eq("id", id)
   if (error) return { error: error.message }
+  // Best-effort image cleanup — non-fatal if it fails
+  const imageUrl = (existing?.image_url as string | null) ?? null
+  if (imageUrl) {
+    try {
+      const marker = `/storage/v1/object/public/${MENU_IMAGE_BUCKET}/`
+      const idx = imageUrl.indexOf(marker)
+      if (idx !== -1) {
+        const oldPath = imageUrl.slice(idx + marker.length)
+        if (oldPath) await supabase.storage.from(MENU_IMAGE_BUCKET).remove([oldPath])
+      }
+    } catch {
+      // ignore
+    }
+  }
   await supabase.rpc("log_activity", { p_action: "menu.deleted", p_entity: "menu_item", p_entity_id: id })
   revalidatePath("/admin/menu")
   return { success: true }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useTransition } from "react"
+import { useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import {
   ChevronDown,
@@ -13,8 +13,10 @@ import {
   Search,
   Tag,
   Trash2,
+  Upload,
   UtensilsCrossed,
   Wine,
+  X,
 } from "lucide-react"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent } from "@/components/ui/card"
@@ -530,10 +532,88 @@ function ItemFormDialog({
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
+  // Image state
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [removeImage, setRemoveImage] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  // Reset image state every time the dialog re-opens (for a different/new item)
+  useEffect(() => {
+    if (open) {
+      setImageFile(null)
+      setImagePreview(null)
+      setRemoveImage(false)
+      setError(null)
+    }
+  }, [open, item?.id])
+
+  // Clean up object URLs to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreview)
+      }
+    }
+  }, [imagePreview])
+
+  const existingImage = item?.image_url ?? null
+  const showExisting = existingImage && !imageFile && !removeImage
+  const showPreview = !!imagePreview
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) {
+      setImageFile(null)
+      setImagePreview(null)
+      return
+    }
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file (JPEG, PNG, WebP, or GIF).")
+      e.target.value = ""
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError(`Image too large (max 5MB). Yours is ${(file.size / 1024 / 1024).toFixed(1)}MB.`)
+      e.target.value = ""
+      return
+    }
+    setError(null)
+    setRemoveImage(false)
+    if (imagePreview && imagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreview)
+    }
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const clearNewFile = () => {
+    if (imagePreview && imagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreview)
+    }
+    setImageFile(null)
+    setImagePreview(null)
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
+  const handleRemoveImage = () => {
+    clearNewFile()
+    setRemoveImage(true)
+  }
+
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
     const fd = new FormData(e.currentTarget)
+    // Strip the empty default File that browsers send for an unselected input
+    const emptyFile = fd.get("image_file")
+    if (emptyFile instanceof File && emptyFile.size === 0) {
+      fd.delete("image_file")
+    }
+    // Carry the "remove" intent through a sentinel field the server respects
+    if (removeImage && !imageFile) {
+      fd.set("image_url", "")
+    }
     startTransition(async () => {
       const result = item
         ? await updateMenuItemAction(item.id, fd)
@@ -542,6 +622,7 @@ function ItemFormDialog({
         setError(result.error)
         return
       }
+      clearNewFile()
       onSaved()
     })
   }
@@ -621,16 +702,91 @@ function ItemFormDialog({
                 defaultValue={item?.prep_minutes ?? 15}
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="image_url">Image URL</Label>
-              <Input
-                id="image_url"
-                name="image_url"
-                type="url"
-                defaultValue={item?.image_url ?? ""}
-                placeholder="https://..."
+
+            {/* Image upload */}
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Image</Label>
+              <input
+                ref={fileInputRef}
+                id="image_file"
+                name="image_file"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={handleFileChange}
+                className="sr-only"
               />
+              {/* Hidden field the server reads when no new file is picked */}
+              <input
+                type="hidden"
+                name="image_url"
+                value={removeImage ? "" : (item?.image_url ?? "")}
+              />
+
+              <div className="flex items-start gap-3">
+                <div className="relative aspect-[4/3] w-40 shrink-0 overflow-hidden rounded-md border bg-gradient-to-br from-muted to-muted/40">
+                  {showPreview || showExisting ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={showPreview ? imagePreview! : existingImage!}
+                      alt="Menu item preview"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <ImageIcon className="size-8 text-muted-foreground/40" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-1 flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="mr-2 size-3.5" />
+                    {showPreview
+                      ? "Replace image"
+                      : showExisting
+                      ? "Replace image"
+                      : "Upload image"}
+                  </Button>
+                  {showPreview && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearNewFile}
+                    >
+                      <X className="mr-2 size-3.5" />
+                      Discard selection
+                    </Button>
+                  )}
+                  {!showPreview && showExisting && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemoveImage}
+                    >
+                      <Trash2 className="mr-2 size-3.5" />
+                      Remove current image
+                    </Button>
+                  )}
+                  {imageFile && (
+                    <p className="break-all text-xs text-muted-foreground">
+                      Selected: {imageFile.name} ({(imageFile.size / 1024).toFixed(0)} KB)
+                    </p>
+                  )}
+                  {!imageFile && !showExisting && (
+                    <p className="text-xs text-muted-foreground">
+                      JPEG, PNG, WebP, or GIF • max 5MB
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
+
             <div className="sm:col-span-2 flex items-center gap-6 rounded-md border p-3">
               <div className="flex items-center gap-2">
                 <Switch
