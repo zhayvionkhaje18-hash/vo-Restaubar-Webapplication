@@ -670,8 +670,7 @@ function ItemFormDialog({
             <div className="space-y-1.5">
               <Label htmlFor="category_id">Category</Label>
               <Select
-                value={item?.category_id ?? "none"}
-                onValueChange={() => {}}
+                defaultValue={item?.category_id ?? "none"}
                 name="category_id"
               >
                 <SelectTrigger id="category_id" className="w-full">
