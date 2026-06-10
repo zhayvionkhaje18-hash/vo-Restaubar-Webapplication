@@ -43,17 +43,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import type { Profile, RestaurantTable, TableStatus } from "@/lib/types"
+import type { RestaurantTable, TableStatus } from "@/lib/types"
 import {
   createTableAction,
   updateTableAction,
   deleteTableAction,
   updateTableStatusAction,
-  assignTableToWaiterAction,
   generateTableQRAction,
 } from "@/app/actions/admin"
-
-type TableWithWaiter = RestaurantTable & { assigned_waiter_profile: Profile | null }
 
 const STATUS_STYLES: Record<TableStatus, { label: string; className: string; dot: string; border: string }> = {
   available: {
@@ -84,10 +81,8 @@ const STATUS_STYLES: Record<TableStatus, { label: string; className: string; dot
 
 export function TablesManager({
   tables,
-  waiters,
 }: {
-  tables: TableWithWaiter[]
-  waiters: Profile[]
+  tables: RestaurantTable[]
 }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -129,13 +124,6 @@ export function TablesManager({
   const onStatusChange = (id: string, status: TableStatus) => {
     startTransition(async () => {
       await updateTableStatusAction(id, status)
-      router.refresh()
-    })
-  }
-
-  const onAssignWaiter = (tableId: string, waiterId: string | null) => {
-    startTransition(async () => {
-      await assignTableToWaiterAction(tableId, waiterId)
       router.refresh()
     })
   }
@@ -273,12 +261,10 @@ export function TablesManager({
             <TableCard
               key={table.id}
               table={table}
-              waiters={waiters}
               pending={pending}
               onEdit={() => setEditDialog({ open: true, table })}
               onDelete={() => setDeleteId(table.id)}
               onStatusChange={(s) => onStatusChange(table.id, s)}
-              onAssignWaiter={(w) => onAssignWaiter(table.id, w)}
               onRegenerateQR={() => onRegenerateQR(table.id)}
             />
           ))}
@@ -289,7 +275,6 @@ export function TablesManager({
       <TableFormDialog
         open={editDialog.open}
         table={editDialog.table}
-        waiters={waiters}
         onClose={() => setEditDialog({ open: false, table: null })}
         onSaved={() => {
           setEditDialog({ open: false, table: null })
@@ -326,21 +311,17 @@ export function TablesManager({
 // ============================================================
 function TableCard({
   table,
-  waiters,
   pending,
   onEdit,
   onDelete,
   onStatusChange,
-  onAssignWaiter,
   onRegenerateQR,
 }: {
-  table: TableWithWaiter
-  waiters: Profile[]
+  table: RestaurantTable
   pending: boolean
   onEdit: () => void
   onDelete: () => void
   onStatusChange: (status: TableStatus) => void
-  onAssignWaiter: (waiterId: string | null) => void
   onRegenerateQR: () => void
 }) {
   const s = STATUS_STYLES[table.status]
@@ -415,30 +396,6 @@ function TableCard({
               </SelectContent>
             </Select>
           </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">Assigned Waiter</Label>
-            <Select
-              value={table.assigned_waiter ?? "none"}
-              onValueChange={(v) => onAssignWaiter(v === "none" ? null : v)}
-              disabled={pending}
-            >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue>
-                  {table.assigned_waiter
-                    ? waiters.find((w) => w.id === table.assigned_waiter)?.full_name ?? "— Unassigned —"
-                    : "— Unassigned —"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">— Unassigned —</SelectItem>
-                {waiters.map((w) => (
-                  <SelectItem key={w.id} value={w.id}>
-                    {w.full_name ?? w.email ?? "Unknown"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         </div>
       </CardContent>
     </Card>
@@ -451,13 +408,11 @@ function TableCard({
 function TableFormDialog({
   open,
   table,
-  waiters,
   onClose,
   onSaved,
 }: {
   open: boolean
-  table: TableWithWaiter | null
-  waiters: Profile[]
+  table: RestaurantTable | null
   onClose: () => void
   onSaved: () => void
 }) {
@@ -536,24 +491,6 @@ function TableFormDialog({
                   <option value="occupied">Occupied</option>
                   <option value="reserved">Reserved</option>
                   <option value="cleaning">Cleaning</option>
-                </select>
-              </div>
-            )}
-            {table && (
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="assigned_waiter">Assigned Waiter</Label>
-                <select
-                  id="assigned_waiter"
-                  name="assigned_waiter"
-                  defaultValue={table.assigned_waiter ?? ""}
-                  className="flex h-8 w-full rounded-md border border-input bg-transparent px-2 text-sm"
-                >
-                  <option value="">— Unassigned —</option>
-                  {waiters.map((w) => (
-                    <option key={w.id} value={w.id}>
-                      {w.full_name ?? w.email}
-                    </option>
-                  ))}
                 </select>
               </div>
             )}

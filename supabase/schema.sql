@@ -432,14 +432,27 @@ alter table public.activity_logs     enable row level security;
 alter table public.restaurant_settings enable row level security;
 
 -- Helper: check if current user is admin
+-- NOTE: Must handle NULL auth.uid() gracefully (customers have no auth user)
 create or replace function public.is_admin() returns boolean
 language sql stable security definer as $$
-  select exists(select 1 from public.profiles where id = auth.uid() and role = 'admin' and is_active = true);
+  select exists(
+    select 1 from public.profiles
+    where id = auth.uid()
+      and role = 'admin'
+      and is_active = true
+      and auth.uid() is not null
+  );
 $$;
 
 create or replace function public.is_staff() returns boolean
 language sql stable security definer as $$
-  select exists(select 1 from public.profiles where id = auth.uid() and role in ('admin','pos','waiter') and is_active = true);
+  select exists(
+    select 1 from public.profiles
+    where id = auth.uid()
+      and role in ('admin','pos','waiter')
+      and is_active = true
+      and auth.uid() is not null
+  );
 $$;
 
 -- PROFILES policies

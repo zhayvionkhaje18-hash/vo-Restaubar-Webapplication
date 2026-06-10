@@ -319,17 +319,6 @@ export async function updateTableStatusAction(id: string, status: string) {
   return { success: true }
 }
 
-export async function assignTableToWaiterAction(tableId: string, waiterId: string | null) {
-  const supabase = await createClient()
-  const { error } = await supabase
-    .from("tables")
-    .update({ assigned_waiter: waiterId })
-    .eq("id", tableId)
-  if (error) return { error: error.message }
-  revalidatePath("/admin/tables")
-  return { success: true }
-}
-
 // ============================================================
 // TABLE QR CODES
 // ============================================================
