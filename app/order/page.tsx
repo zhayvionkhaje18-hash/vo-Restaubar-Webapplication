@@ -17,8 +17,134 @@ import {
   ArrowLeft,
   Check,
   X,
+  Clock,
+  ChefHat,
+  Truck,
+  PartyPopper,
 } from "lucide-react"
-import type { Category, MenuItem, RestaurantTable } from "@/lib/types"
+import type { Category, MenuItem, RestaurantTable, OrderStatus } from "@/lib/types"
+
+// ============================================================
+// ORDER STATUS TRACKER
+// ============================================================
+const STATUS_STEPS: { status: OrderStatus; label: string; icon: typeof Clock }[] = [
+  { status: "pending", label: "Order Sent", icon: Clock },
+  { status: "confirmed", label: "Confirmed", icon: Check },
+  { status: "preparing", label: "Preparing", icon: ChefHat },
+  { status: "ready", label: "Ready to Serve", icon: Truck },
+  { status: "served", label: "Served", icon: PartyPopper },
+]
+
+function OrderStatusTracker({ token }: { token: string | null }) {
+  const [currentStatus, setCurrentStatus] = useState<OrderStatus>("pending")
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!token) return
+
+    async function fetchOrder() {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from("orders")
+        .select("status")
+        .eq("session_token", token)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single()
+
+      if (data) {
+        setCurrentStatus(data.status)
+      }
+      setLoading(false)
+    }
+
+    fetchOrder()
+
+    // Poll for updates every 5 seconds
+    const interval = setInterval(fetchOrder, 5000)
+    return () => clearInterval(interval)
+  }, [token])
+
+  function getStepState(stepStatus: OrderStatus): "completed" | "active" | "pending" {
+    const statusOrder: OrderStatus[] = ["pending", "confirmed", "preparing", "ready", "served"]
+    const currentIndex = statusOrder.indexOf(currentStatus)
+    const stepIndex = statusOrder.indexOf(stepStatus)
+
+    if (stepIndex < currentIndex) return "completed"
+    if (stepIndex === currentIndex) return "active"
+    return "pending"
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-4 flex items-center justify-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <h3 className="font-semibold mb-4 text-center">Order Status</h3>
+        <div className="space-y-0">
+          {STATUS_STEPS.map((step, index) => {
+            const state = getStepState(step.status)
+            const Icon = step.icon
+            const isLast = index === STATUS_STEPS.length - 1
+
+            return (
+              <div key={step.status} className="flex items-start gap-4">
+                {/* Icon & Line */}
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
+                      state === "completed"
+                        ? "bg-green-500 border-green-500 text-white"
+                        : state === "active"
+                        ? "bg-primary border-primary text-primary-foreground animate-pulse"
+                        : "bg-muted border-muted-foreground/30 text-muted-foreground"
+                    }`}
+                  >
+                    <Icon className="size-5" />
+                  </div>
+                  {!isLast && (
+                    <div
+                      className={`h-8 w-0.5 ${
+                        state === "completed" ? "bg-green-500" : "bg-muted-foreground/20"
+                      }`}
+                    />
+                  )}
+                </div>
+
+                {/* Label */}
+                <div className="flex-1 pb-6">
+                  <p className={`font-medium ${state === "active" ? "text-primary" : ""}`}>
+                    {step.label}
+                  </p>
+                  {state === "completed" && (
+                    <p className="text-xs text-green-600">Done</p>
+                  )}
+                  {state === "active" && (
+                    <p className="text-xs text-muted-foreground">In progress...</p>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="mt-4 rounded-lg bg-muted/50 p-3 text-center">
+          <p className="text-sm text-muted-foreground">
+            Status updates automatically as our staff prepares your order
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 // ============================================================
 // WELCOME MODAL
@@ -355,6 +481,8 @@ function CustomerOrderContent() {
   const [submitting, setSubmitting] = useState(false)
   const [orderPlaced, setOrderPlaced] = useState(false)
   const [orderNumber, setOrderNumber] = useState<number | null>(null)
+  const [orderTotal, setOrderTotal] = useState<number>(0)
+  const [orderItems, setOrderItems] = useState<CartItem[]>([])
   const [activeCategory, setActiveCategory] = useState<string>("all")
 
   // Load table, categories, and menu
@@ -468,7 +596,7 @@ function CustomerOrderContent() {
       .single()
 
     if (orderError || !orderData) {
-      alert("Failed to create order. Please try again.")
+      alert("Failed to create order: " + (orderError?.message || "Unknown error"))
       setSubmitting(false)
       return
     }
@@ -486,18 +614,14 @@ function CustomerOrderContent() {
     const { error: itemsError } = await supabase.from("order_items").insert(orderItems)
 
     if (itemsError) {
-      alert("Failed to add items. Please try again.")
+      alert("Failed to add items: " + (itemsError.message || "Unknown error"))
       setSubmitting(false)
       return
     }
 
-    // Update table status
-    await supabase
-      .from("tables")
-      .update({ status: "occupied", current_order_id: orderData.id })
-      .eq("id", table.id)
-
     setOrderNumber(orderData.order_number)
+    setOrderTotal(cartTotal)
+    setOrderItems([...cart])
     setOrderPlaced(true)
     setCart([])
     setShowCart(false)
@@ -550,34 +674,68 @@ function CustomerOrderContent() {
     )
   }
 
-  // Order placed success
+  // Order placed success - show tracking page
   if (orderPlaced) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <Card className="max-w-md text-center shadow-2xl">
-          <CardContent className="p-8">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-500 shadow-lg">
-              <Check className="size-10 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-green-600">Order Placed!</h1>
-            <p className="mt-2 text-muted-foreground">
-              Your order has been sent to our kitchen.
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="border-b bg-primary text-primary-foreground">
+          <div className="mx-auto max-w-2xl px-4 py-6 text-center">
+            <Check className="mx-auto mb-3 size-12" />
+            <h1 className="text-2xl font-bold">Order Placed!</h1>
+            <p className="mt-1 text-primary-foreground/80">
+              Your order has been sent to our kitchen
             </p>
-            <div className="mt-6 rounded-xl bg-muted/50 px-6 py-4">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                Order Number
-              </p>
-              <p className="text-4xl font-black text-primary">#{orderNumber}</p>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-2xl px-4 py-8 space-y-6">
+          {/* Order Details Card */}
+          <Card className="overflow-hidden">
+            <div className="bg-primary p-4 text-primary-foreground">
+              <p className="text-xs uppercase tracking-wider opacity-80">Order Number</p>
+              <p className="text-3xl font-black">#{orderNumber}</p>
             </div>
-            <div className="mt-4 space-y-1 text-sm text-muted-foreground">
-              <p>Table: <strong>{table.label}</strong></p>
-              <p>Name: <strong>{customerName}</strong></p>
-            </div>
-            <p className="mt-6 text-sm text-muted-foreground">
-              Our staff will bring your order to you shortly.
-            </p>
-          </CardContent>
-        </Card>
+            <CardContent className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Table</p>
+                  <p className="font-bold text-xl">{table.label}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Name</p>
+                  <p className="font-bold">{customerName}</p>
+                </div>
+              </div>
+              <div className="border-t pt-4">
+                <p className="text-muted-foreground text-sm">Total Amount</p>
+                <p className="text-3xl font-black text-primary">
+                  ₱{orderTotal.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Status Tracker */}
+          <OrderStatusTracker token={token} />
+
+          {/* Order Items */}
+          {orderItems.length > 0 && (
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="font-semibold mb-3">Your Order Items</h3>
+                <div className="space-y-2">
+                  {orderItems.map(({ item, quantity }) => (
+                    <div key={item.id} className="flex items-center justify-between text-sm">
+                      <span>{quantity}x {item.name}</span>
+                      <span className="font-medium">₱{(item.price * quantity).toLocaleString("en-PH", { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </main>
       </div>
     )
   }
