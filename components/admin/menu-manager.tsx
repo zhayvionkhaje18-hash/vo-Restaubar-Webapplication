@@ -674,7 +674,12 @@ function ItemFormDialog({
                 name="category_id"
               >
                 <SelectTrigger id="category_id" className="w-full">
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue>
+                    {(() => {
+                      const selected = categories.find((c) => c.id === item?.category_id)
+                      return selected ? selected.name : "— No category —"
+                    })()}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">— No category —</SelectItem>
