@@ -538,13 +538,17 @@ function ItemFormDialog({
   const [removeImage, setRemoveImage] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  // Reset image state every time the dialog re-opens (for a different/new item)
+  // Controlled Select state for category
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("none")
+
+  // Reset state every time the dialog re-opens (for a different/new item)
   useEffect(() => {
     if (open) {
       setImageFile(null)
       setImagePreview(null)
       setRemoveImage(false)
       setError(null)
+      setSelectedCategoryId(item?.category_id ?? "none")
     }
   }, [open, item?.id])
 
@@ -670,15 +674,15 @@ function ItemFormDialog({
             <div className="space-y-1.5">
               <Label htmlFor="category_id">Category</Label>
               <Select
-                defaultValue={item?.category_id ?? "none"}
+                value={selectedCategoryId}
+                onValueChange={(v) => setSelectedCategoryId(v)}
                 name="category_id"
               >
                 <SelectTrigger id="category_id" className="w-full">
                   <SelectValue>
-                    {(() => {
-                      const selected = categories.find((c) => c.id === item?.category_id)
-                      return selected ? selected.name : "— No category —"
-                    })()}
+                    {selectedCategoryId === "none"
+                      ? "— No category —"
+                      : categories.find((c) => c.id === selectedCategoryId)?.name ?? "— No category —"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
