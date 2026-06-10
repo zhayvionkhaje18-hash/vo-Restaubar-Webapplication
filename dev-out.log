@@ -158,3 +158,6 @@
  POST /admin/tables 200 in 1229ms (next.js: 4ms, proxy.ts: 277ms, application-code: 948ms)
   └─ ƒ updateTableStatusAction("c05aa64f-ead1-405f-9c56-4e22c105617d", "occupied") in 208ms app/actions/admin.ts
  GET /admin/tables 200 in 932ms (next.js: 5ms, proxy.ts: 262ms, application-code: 665ms)
+ GET /login 200 in 60ms (next.js: 6ms, proxy.ts: 7ms, application-code: 47ms)
+ POST /admin/tables 303 in 1044ms (next.js: 6ms, proxy.ts: 760ms, application-code: 278ms)
+  └─ ƒ signOut() in 200ms app/actions/auth.ts
