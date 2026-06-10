@@ -89,39 +89,49 @@ export function TablesManager({
   const [search, setSearch] = useState("")
   const [zoneFilter, setZoneFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<TableStatus | "all">("all")
-  const [editDialog, setEditDialog] = useState<{ open: boolean; table: TableWithWaiter | null }>({
+  const [localTables, setLocalTables] = useState<RestaurantTable[]>(tables)
+  const [editDialog, setEditDialog] = useState<{ open: boolean; table: RestaurantTable | null }>({
     open: false,
     table: null,
   })
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
-  const zones = useMemo(() => {
-    const set = new Set<string>()
-    for (const t of tables) if (t.zone) set.add(t.zone)
-    return Array.from(set).sort()
+  // Sync local state when server data changes
+  useEffect(() => {
+    setLocalTables(tables)
   }, [tables])
 
+  const zones = useMemo(() => {
+    const set = new Set<string>()
+    for (const t of localTables) if (t.zone) set.add(t.zone)
+    return Array.from(set).sort()
+  }, [localTables])
+
   const filtered = useMemo(() => {
-    return tables.filter((t) => {
+    return localTables.filter((t) => {
       if (statusFilter !== "all" && t.status !== statusFilter) return false
       if (zoneFilter !== "all" && t.zone !== zoneFilter) return false
       if (!search) return true
       const q = search.toLowerCase()
       return t.label.toLowerCase().includes(q) || (t.zone ?? "").toLowerCase().includes(q)
     })
-  }, [tables, search, statusFilter, zoneFilter])
+  }, [localTables, search, statusFilter, zoneFilter])
 
   const stats = useMemo(() => {
-    const total = tables.length
-    const occupied = tables.filter((t) => t.status === "occupied").length
-    const available = tables.filter((t) => t.status === "available").length
-    const reserved = tables.filter((t) => t.status === "reserved").length
-    const unavailable = tables.filter((t) => t.status === "unavailable").length
+    const total = localTables.length
+    const occupied = localTables.filter((t) => t.status === "occupied").length
+    const available = localTables.filter((t) => t.status === "available").length
+    const reserved = localTables.filter((t) => t.status === "reserved").length
+    const unavailable = localTables.filter((t) => t.status === "unavailable").length
     const utilization = total > 0 ? Math.round((occupied / total) * 100) : 0
     return { total, occupied, available, reserved, unavailable, utilization }
-  }, [tables])
+  }, [localTables])
 
   const onStatusChange = (id: string, status: TableStatus) => {
+    // Update local state immediately
+    setLocalTables((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, status } : t))
+    )
     startTransition(async () => {
       await updateTableStatusAction(id, status)
       router.refresh()
