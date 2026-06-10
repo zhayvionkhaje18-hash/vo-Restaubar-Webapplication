@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { Suspense, useEffect, useState, useCallback } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { RESTAURANT_NAME } from "@/lib/constants"
@@ -323,6 +323,21 @@ interface CartItem {
 }
 
 export default function CustomerOrderPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <CustomerOrderContent />
+    </Suspense>
+  )
+}
+
+function CustomerOrderContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const supabase = createClient()
