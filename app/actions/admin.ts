@@ -606,6 +606,29 @@ export async function deleteReservationAction(id: string) {
 // ============================================================
 // RESTAURANT SETTINGS
 // ============================================================
+async function uploadLogo(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  file: File
+): Promise<{ url?: string; error?: string }> {
+  const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+  if (!allowed.includes(file.type)) return { error: "Logo must be JPG, PNG, WebP, or GIF" }
+  if (file.size > 2 * 1024 * 1024) return { error: "Logo too large (max 2MB)" }
+  if (file.size === 0) return { error: "Empty file" }
+
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase()
+  const safeExt = ["jpg", "jpeg", "png", "webp", "gif"].includes(ext) ? ext : "jpg"
+  const filename = `logo.${safeExt}`
+
+  const { error: uploadErr } = await supabase.storage
+    .from("restaurant")
+    .upload(filename, file, { contentType: file.type, upsert: true })
+
+  if (uploadErr) return { error: `Upload failed: ${uploadErr.message}` }
+
+  const { data } = supabase.storage.from("restaurant").getPublicUrl(filename)
+  return { url: data.publicUrl }
+}
+
 export async function updateRestaurantSettingsAction(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -623,7 +646,6 @@ export async function updateRestaurantSettingsAction(formData: FormData) {
   const phone = (formData.get("phone") as string)?.trim() || null
   const email = (formData.get("email") as string)?.trim() || null
   const tin = (formData.get("tin") as string)?.trim() || null
-  const logo_url = (formData.get("logo_url") as string)?.trim() || null
   const currency = (formData.get("currency") as string)?.trim() || "₱"
   const tax_rate = parseFloat(formData.get("tax_rate") as string) || 0
   const service_charge = parseFloat(formData.get("service_charge") as string) || 0
@@ -633,9 +655,23 @@ export async function updateRestaurantSettingsAction(formData: FormData) {
 
   if (!name) return { error: "Restaurant name is required" }
 
+  // Handle logo upload
+  let logo_url: string | null = null
+  const logoFile = formData.get("logo_file")
+  if (logoFile instanceof File && logoFile.size > 0) {
+    const result = await uploadLogo(supabase, logoFile)
+    if (result.error) return { error: result.error }
+    logo_url = result.url ?? null
+  } else {
+    // Keep existing logo_url from hidden field
+    logo_url = (formData.get("logo_url") as string)?.trim() || null
+  }
+
+  // Upsert: insert if not exists, update if exists
   const { error } = await supabase
     .from("restaurant_settings")
-    .update({
+    .upsert({
+      id: 1,
       name,
       tagline,
       address,
@@ -649,8 +685,7 @@ export async function updateRestaurantSettingsAction(formData: FormData) {
       receipt_footer,
       open_time,
       close_time,
-    })
-    .eq("id", 1)
+    }, { onConflict: "id" })
 
   if (error) return { error: error.message }
   await supabase.rpc("log_activity", {

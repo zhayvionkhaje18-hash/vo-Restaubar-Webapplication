@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { getSessionProfile } from "@/lib/auth"
+import { getRestaurantSettings } from "@/lib/data/admin"
 import { ROLE_HOME } from "@/lib/constants"
 import { StaffShell, type NavItem } from "@/components/staff-shell"
 
@@ -16,12 +17,22 @@ const NAV: NavItem[] = [
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const profile = await getSessionProfile()
+  const [profile, settings] = await Promise.all([
+    getSessionProfile(),
+    getRestaurantSettings(),
+  ])
   if (!profile) redirect("/login?next=/admin")
   if (profile.role !== "admin") redirect(ROLE_HOME[profile.role] ?? "/")
 
   return (
-    <StaffShell profile={profile} items={NAV} title="Admin Console">
+    <StaffShell
+      profile={profile}
+      items={NAV}
+      title="Admin Console"
+      restaurantName={settings?.name}
+      restaurantTagline={settings?.tagline}
+      restaurantLogo={settings?.logo_url}
+    >
       {children}
     </StaffShell>
   )

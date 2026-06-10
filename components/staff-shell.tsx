@@ -158,11 +158,28 @@ function LiveStatusPill() {
   )
 }
 
-function Sidebar({ items, profile }: { items: NavItem[]; profile: Profile }) {
+function Sidebar({
+  items,
+  profile,
+  restaurantName,
+  restaurantTagline,
+  restaurantLogo,
+}: {
+  items: NavItem[]
+  profile: Profile
+  restaurantName?: string
+  restaurantTagline?: string
+  restaurantLogo?: string | null
+}) {
   return (
     <div className="flex h-full flex-col">
       <div className="px-5 py-5">
-        <Brand variant="sidebar" />
+        <Brand
+          variant="sidebar"
+          name={restaurantName}
+          tagline={restaurantTagline}
+          logoUrl={restaurantLogo}
+        />
       </div>
       <div className="flex-1 overflow-y-auto">
         <SidebarSectionLabel>Workspace</SidebarSectionLabel>
@@ -178,11 +195,17 @@ export function StaffShell({
   items,
   title,
   children,
+  restaurantName,
+  restaurantTagline,
+  restaurantLogo,
 }: {
   profile: Profile
   items: NavItem[]
   title: string
   children: React.ReactNode
+  restaurantName?: string
+  restaurantTagline?: string
+  restaurantLogo?: string | null
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -190,7 +213,13 @@ export function StaffShell({
     <div className="flex min-h-svh bg-background">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
-        <Sidebar items={items} profile={profile} />
+        <Sidebar
+          items={items}
+          profile={profile}
+          restaurantName={restaurantName}
+          restaurantTagline={restaurantTagline}
+          restaurantLogo={restaurantLogo}
+        />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -204,7 +233,13 @@ export function StaffShell({
             </SheetTrigger>
             <SheetContent side="left" className="w-72 border-sidebar-border bg-sidebar p-0">
               <SheetTitle className="sr-only">Navigation</SheetTitle>
-              <Sidebar items={items} profile={profile} />
+              <Sidebar
+                items={items}
+                profile={profile}
+                restaurantName={restaurantName}
+                restaurantTagline={restaurantTagline}
+                restaurantLogo={restaurantLogo}
+              />
             </SheetContent>
           </Sheet>
 

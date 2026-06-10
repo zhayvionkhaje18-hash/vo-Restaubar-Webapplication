@@ -110,26 +110,42 @@ export function SettingsManager({ settings }: { settings: RestaurantSettings | n
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="logo_url">Logo URL</Label>
-              <div className="flex items-center gap-3">
-                <div className="flex size-14 shrink-0 items-center justify-center rounded-md border bg-muted">
+              <Label>Restaurant Logo</Label>
+              <div className="flex items-center gap-4">
+                <div className="relative flex size-16 shrink-0 items-center justify-center rounded-md border bg-muted overflow-hidden">
                   {s.logo_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={s.logo_url} alt="Logo" className="size-full rounded-md object-cover" />
+                    <img id="logo_preview" src={s.logo_url} alt="Logo" className="size-full object-contain" />
                   ) : (
-                    <ImageIcon className="size-5 text-muted-foreground" />
+                    <ImageIcon className="size-6 text-muted-foreground" />
                   )}
                 </div>
-                <Input
-                  id="logo_url"
-                  name="logo_url"
-                  type="url"
-                  defaultValue={s.logo_url ?? ""}
-                  placeholder="https://..."
-                  className="flex-1"
-                />
+                <div className="flex-1 space-y-2">
+                  <input type="hidden" name="logo_url" id="logo_url_hidden" value={s.logo_url ?? ""} />
+                  <input
+                    type="file"
+                    id="logo_file"
+                    name="logo_file"
+                    accept="image/*"
+                    className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-muted file:text-foreground hover:file:bg-muted/80 cursor-pointer"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      const preview = document.getElementById("logo_preview")
+                      const hidden = document.getElementById("logo_url_hidden") as HTMLInputElement
+                      if (file && preview) {
+                        const reader = new FileReader()
+                        reader.onload = (ev) => {
+                          if (preview.tagName === "IMG") {
+                            preview.src = ev.target?.result as string
+                          }
+                        }
+                        reader.readAsDataURL(file)
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">JPG, PNG, WebP or GIF (max 2MB)</p>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">Upload via Supabase Storage → restaurant bucket, paste the public URL</p>
             </div>
           </CardContent>
         </Card>
