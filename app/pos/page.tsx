@@ -4,8 +4,14 @@ import { PosDashboard } from "@/components/dashboard/pos-dashboard"
 
 export default async function PosPage() {
   const profile = await getSessionProfile()
-  if (!profile) redirect("/login")
-  if (profile.role !== "pos") redirect("/")
+  if (!profile) {
+    redirect("/login")
+    return
+  }
+  if (profile.role !== "pos") {
+    redirect("/")
+    return
+  }
 
   return <PosDashboard profile={profile} />
 }

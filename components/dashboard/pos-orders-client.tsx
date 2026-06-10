@@ -106,6 +106,7 @@ export function PosOrdersClient({
   })
 
   const filtered = orders.filter((o) => {
+    if (!o.status) return false
     if (tab !== "all" && o.status !== tab) return false
     if (!search) return true
     const q = search.toLowerCase()
@@ -119,6 +120,7 @@ export function PosOrdersClient({
 
   const counts = orders.reduce(
     (acc, o) => {
+      if (!o.status) return acc
       acc[o.status] = (acc[o.status] ?? 0) + 1
       return acc
     },
@@ -265,8 +267,8 @@ export function PosOrdersClient({
           {selectedOrder && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Badge className={STATUS_CONFIG[selectedOrder.status as OrderStatus]?.color ?? "bg-gray-100"}>
-                  {STATUS_CONFIG[selectedOrder.status as OrderStatus]?.label ?? selectedOrder.status}
+                <Badge className={STATUS_CONFIG[selectedOrder?.status as OrderStatus]?.color ?? "bg-gray-100"}>
+                  {STATUS_CONFIG[selectedOrder?.status as OrderStatus]?.label ?? selectedOrder?.status}
                 </Badge>
                 {selectedOrder.customer_name && (
                   <span className="text-sm text-muted-foreground">
@@ -317,35 +319,36 @@ export function PosOrdersClient({
             <Button variant="outline" onClick={() => setSelectedOrder(null)}>
               Close
             </Button>
-            {selectedOrder?.payment_status !== "paid" && selectedOrder?.status !== "cancelled" && (
+            {selectedOrder && selectedOrder.payment_status !== "paid" && selectedOrder?.status && selectedOrder?.status !== "cancelled" && (
               <>
                 <Button
                   variant="destructive"
-                  onClick={() => handleCancel(selectedOrder)}
+                  onClick={() => selectedOrder && handleCancel(selectedOrder)}
                   disabled={pending}
                 >
                   <X className="size-3.5" />
                   <span className="ml-1.5">Cancel</span>
                 </Button>
-                {NEXT_STATUS[selectedOrder.status as OrderStatus] && (
+                {selectedOrder?.status && NEXT_STATUS[selectedOrder.status as OrderStatus] && (
                   <Button
                     onClick={() =>
+                      selectedOrder &&
                       handleStatusUpdate(
                         selectedOrder,
-                        NEXT_STATUS[selectedOrder.status as OrderStatus]!
+                        NEXT_STATUS[selectedOrder?.status as OrderStatus]!
                       )
                     }
                     disabled={pending}
                   >
-                    {STATUS_ACTION[selectedOrder.status as OrderStatus]?.icon}
+                    {STATUS_ACTION[selectedOrder?.status as OrderStatus]?.icon}
                     <span className="ml-1.5">
-                      {STATUS_ACTION[selectedOrder.status as OrderStatus]?.label}
+                      {STATUS_ACTION[selectedOrder?.status as OrderStatus]?.label}
                     </span>
                   </Button>
                 )}
-                {selectedOrder.status === "served" && (
+                {selectedOrder?.status === "served" && (
                   <Button
-                    onClick={() => openPayDialog(selectedOrder)}
+                    onClick={() => selectedOrder && openPayDialog(selectedOrder)}
                     disabled={pending}
                   >
                     <CreditCard className="size-3.5" />
@@ -482,7 +485,7 @@ function OrderCard({
   onPay: () => void
   pending: boolean
 }) {
-  const next = NEXT_STATUS[order.status as OrderStatus]
+  const next = order.status ? NEXT_STATUS[order.status as OrderStatus] : undefined
 
   return (
     <Card>

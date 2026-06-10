@@ -30,5 +30,8 @@ export default async function PosOrdersPage() {
     .order("created_at", { ascending: false })
     .limit(50)
 
-  return <PosOrdersClient profile={profile} initialOrders={orders ?? []} />
+  // Filter out any orders with null status (defensive)
+  const safeOrders = (orders ?? []).filter((o) => o.status !== null)
+
+  return <PosOrdersClient profile={profile} initialOrders={safeOrders} />
 }
