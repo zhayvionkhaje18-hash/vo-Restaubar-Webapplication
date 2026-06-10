@@ -423,7 +423,11 @@ function TableCard({
               disabled={pending}
             >
               <SelectTrigger className="h-8 text-xs">
-                <SelectValue />
+                <SelectValue>
+                  {table.assigned_waiter
+                    ? waiters.find((w) => w.id === table.assigned_waiter)?.full_name ?? "— Unassigned —"
+                    : "— Unassigned —"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">— Unassigned —</SelectItem>
