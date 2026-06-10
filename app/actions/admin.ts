@@ -608,20 +608,18 @@ export async function deleteReservationAction(id: string) {
 // ============================================================
 async function uploadLogo(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  file: File
+  file: File | Blob
 ): Promise<{ url?: string; error?: string }> {
   const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"]
   if (!allowed.includes(file.type)) return { error: "Logo must be JPG, PNG, WebP, or GIF" }
   if (file.size > 5 * 1024 * 1024) return { error: "Logo too large (max 5MB)" }
   if (file.size === 0) return { error: "Empty file" }
 
-  const ext = (file.name.split(".").pop() || "jpg").toLowerCase()
-  const safeExt = ["jpg", "jpeg", "png", "webp", "gif"].includes(ext) ? ext : "jpg"
-  const filename = `logo.${safeExt}`
+  const filename = `logo.${Date.now()}.jpg`
 
   const { error: uploadErr } = await supabase.storage
     .from("restaurant")
-    .upload(filename, file, { contentType: file.type, upsert: true })
+    .upload(filename, file, { contentType: "image/jpeg", upsert: true })
 
   if (uploadErr) return { error: `Upload failed: ${uploadErr.message}` }
 

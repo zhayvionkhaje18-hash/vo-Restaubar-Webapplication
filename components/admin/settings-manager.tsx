@@ -14,6 +14,7 @@ import {
   Save,
   Settings as SettingsIcon,
   ShieldCheck,
+  Loader2,
 } from "lucide-react"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,6 +26,41 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { updateRestaurantSettingsAction } from "@/app/actions/admin"
 import type { RestaurantSettings } from "@/lib/types"
+
+// Compress image client-side before upload
+async function compressImage(file: File, maxDim = 800, quality = 0.75): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      let { width, height } = img
+      if (width > maxDim || height > maxDim) {
+        const ratio = Math.min(maxDim / width, maxDim / height)
+        width = Math.round(width * ratio)
+        height = Math.round(height * ratio)
+      }
+      const canvas = document.createElement("canvas")
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext("2d")!
+      ctx.drawImage(img, 0, 0, width, height)
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob)
+          else reject(new Error("Compression failed"))
+        },
+        "image/jpeg",
+        quality
+      )
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error("Failed to load image"))
+    }
+    img.src = url
+  })
+}
 
 const DEFAULT_SETTINGS: RestaurantSettings = {
   id: 1,
@@ -49,13 +85,32 @@ export function SettingsManager({ settings }: { settings: RestaurantSettings | n
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [compressing, setCompressing] = useState(false)
   const s = settings ?? DEFAULT_SETTINGS
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
     setSuccess(false)
+
     const fd = new FormData(e.currentTarget)
+
+    // Compress logo if a new file is selected
+    const logoFile = fd.get("logo_file")
+    if (logoFile instanceof File && logoFile.size > 0) {
+      setCompressing(true)
+      try {
+        const compressed = await compressImage(logoFile)
+        // Replace the file in FormData with compressed version
+        fd.delete("logo_file")
+        fd.append("logo_file", compressed, `logo-${Date.now()}.jpg`)
+      } catch {
+        // Use original if compression fails
+        console.warn("Logo compression failed, using original")
+      }
+      setCompressing(false)
+    }
+
     startTransition(async () => {
       const result = await updateRestaurantSettingsAction(fd)
       if (result?.error) {
@@ -75,9 +130,13 @@ export function SettingsManager({ settings }: { settings: RestaurantSettings | n
         description="Configure your restaurant's identity, tax rates, and operating hours."
         crumbs={[{ label: "Admin", href: "/admin" }, { label: "Settings" }]}
         actions={
-          <Button type="submit" form="settings-form" size="sm" disabled={pending}>
-            <Save className={`mr-2 size-4 ${pending ? "animate-pulse" : ""}`} />
-            {pending ? "Saving..." : "Save Changes"}
+          <Button type="submit" form="settings-form" size="sm" disabled={pending || compressing}>
+            {(pending || compressing) ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 size-4" />
+            )}
+            {compressing ? "Compressing..." : pending ? "Saving..." : "Save Changes"}
           </Button>
         }
       />
@@ -143,7 +202,7 @@ export function SettingsManager({ settings }: { settings: RestaurantSettings | n
                       }
                     }}
                   />
-                  <p className="text-xs text-muted-foreground">JPG, PNG, WebP or GIF (max 5MB)</p>
+                  <p className="text-xs text-muted-foreground">JPG, PNG, WebP or GIF • Auto-compressed to save space (max 5MB)</p>
                 </div>
               </div>
             </div>
@@ -302,9 +361,13 @@ export function SettingsManager({ settings }: { settings: RestaurantSettings | n
             <SettingsIcon className="mr-1 size-3" />
             Last updated {new Date(s.updated_at).toLocaleString("en-PH")}
           </Badge>
-          <Button type="submit" size="sm" disabled={pending}>
-            <Save className={`mr-2 size-4 ${pending ? "animate-pulse" : ""}`} />
-            {pending ? "Saving..." : "Save Changes"}
+          <Button type="submit" size="sm" disabled={pending || compressing}>
+            {(pending || compressing) ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 size-4" />
+            )}
+            {compressing ? "Compressing..." : pending ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </form>
