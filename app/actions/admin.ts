@@ -539,7 +539,9 @@ export async function createOrderWithPaymentAction(input: {
   await supabase.from("receipts").insert({
     order_id: order.id,
     payment_id: payment.id,
-    subtotal, tax, total,
+    subtotal,
+    tax,
+    total,
   })
 
   // 7. Log
