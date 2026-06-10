@@ -265,8 +265,8 @@ export function PosOrdersClient({
           {selectedOrder && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Badge className={STATUS_CONFIG[selectedOrder.status].color}>
-                  {STATUS_CONFIG[selectedOrder.status].label}
+                <Badge className={STATUS_CONFIG[selectedOrder.status as OrderStatus]?.color ?? "bg-gray-100"}>
+                  {STATUS_CONFIG[selectedOrder.status as OrderStatus]?.label ?? selectedOrder.status}
                 </Badge>
                 {selectedOrder.customer_name && (
                   <span className="text-sm text-muted-foreground">
@@ -501,8 +501,8 @@ function OrderCard({
               <p className="text-sm text-muted-foreground">{order.customer_name}</p>
             )}
           </div>
-          <Badge className={STATUS_CONFIG[order.status]?.color ?? "bg-gray-100"}>
-            {STATUS_CONFIG[order.status]?.label ?? order.status}
+<Badge className={STATUS_CONFIG[order.status as OrderStatus]?.color ?? "bg-gray-100"}>
+                  {STATUS_CONFIG[order.status as OrderStatus]?.label ?? order.status}
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground">

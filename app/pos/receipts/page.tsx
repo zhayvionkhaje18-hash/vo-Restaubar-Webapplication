@@ -5,8 +5,15 @@ import { PosReceiptsClient } from "@/components/dashboard/pos-receipts-client"
 
 export default async function PosReceiptsPage() {
   const profile = await getSessionProfile()
-  if (!profile) redirect("/login")
-  if (profile.role !== "pos") redirect("/")
+
+  if (!profile) {
+    redirect("/login")
+    return
+  }
+  if (profile.role !== "pos") {
+    redirect("/")
+    return
+  }
 
   const supabase = await createClient()
 

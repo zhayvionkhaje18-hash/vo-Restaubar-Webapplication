@@ -5,8 +5,15 @@ import { PosOrdersClient } from "@/components/dashboard/pos-orders-client"
 
 export default async function PosOrdersPage() {
   const profile = await getSessionProfile()
-  if (!profile) redirect("/login")
-  if (profile.role !== "pos") redirect("/")
+
+  if (!profile) {
+    redirect("/login")
+    return // prevent TS from complaining
+  }
+  if (profile.role !== "pos") {
+    redirect("/")
+    return
+  }
 
   const supabase = await createClient()
 
