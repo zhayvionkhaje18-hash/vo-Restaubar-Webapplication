@@ -356,6 +356,7 @@ export function MenuManager({
 
       {/* Item dialog */}
       <ItemFormDialog
+        key={itemDialog.item?.id ?? "new"}
         open={itemDialog.open}
         item={itemDialog.item}
         categories={categories}
@@ -368,6 +369,7 @@ export function MenuManager({
 
       {/* Category dialog */}
       <CategoryFormDialog
+        key={categoryDialog.category?.id ?? "new"}
         open={categoryDialog.open}
         category={categoryDialog.category}
         onClose={() => setCategoryDialog({ open: false, category: null })}
