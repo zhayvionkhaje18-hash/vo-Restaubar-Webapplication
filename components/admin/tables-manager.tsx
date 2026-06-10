@@ -324,7 +324,13 @@ function TableCard({
   onStatusChange: (status: TableStatus) => void
   onRegenerateQR: () => void
 }) {
-  const s = STATUS_STYLES[table.status]
+  const [currentStatus, setCurrentStatus] = useState<TableStatus>(table.status)
+  const s = STATUS_STYLES[currentStatus]
+
+  const handleStatusChange = (newStatus: TableStatus) => {
+    setCurrentStatus(newStatus)
+    onStatusChange(newStatus)
+  }
   return (
     <Card className={`overflow-hidden transition-all hover:shadow-sm ${s.border}`}>
       <CardContent className="p-4">
@@ -381,8 +387,8 @@ function TableCard({
           <div>
             <Label className="text-xs text-muted-foreground">Status</Label>
             <Select
-              value={table.status}
-              onValueChange={(v) => onStatusChange(v as TableStatus)}
+              value={currentStatus}
+              onValueChange={handleStatusChange}
               disabled={pending}
             >
               <SelectTrigger className="h-8 text-xs">
