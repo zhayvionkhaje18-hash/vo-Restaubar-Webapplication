@@ -1,5 +1,5 @@
 export type UserRole = "admin" | "pos" | "waiter"
-export type TableStatus = "available" | "occupied" | "reserved" | "cleaning"
+export type TableStatus = "available" | "occupied" | "reserved" | "unavailable"
 export type OrderStatus = "pending" | "confirmed" | "preparing" | "ready" | "served" | "completed" | "cancelled"
 export type PaymentStatus = "unpaid" | "pending" | "paid" | "refunded"
 export type PaymentMethod = "cash" | "card" | "gcash" | "maya" | "other"

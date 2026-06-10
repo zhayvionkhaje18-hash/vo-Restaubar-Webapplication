@@ -20,7 +20,7 @@ const STATUS_CONFIG = {
   available: { label: "Available", color: "bg-green-500", text: "text-green-500" },
   occupied: { label: "Occupied", color: "bg-orange-500", text: "text-orange-500" },
   reserved: { label: "Reserved", color: "bg-blue-500", text: "text-blue-500" },
-  cleaning: { label: "Cleaning", color: "bg-gray-500", text: "text-gray-500" },
+  unavailable: { label: "Unavailable", color: "bg-gray-500", text: "text-gray-500" },
 }
 
 interface PendingOrder extends Order {

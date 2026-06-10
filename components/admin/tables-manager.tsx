@@ -71,11 +71,11 @@ const STATUS_STYLES: Record<TableStatus, { label: string; className: string; dot
     dot: "bg-amber-500",
     border: "border-amber-500/30",
   },
-  cleaning: {
-    label: "Cleaning",
-    className: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-    dot: "bg-blue-500",
-    border: "border-blue-500/30",
+  unavailable: {
+    label: "Unavailable",
+    className: "bg-slate-500/10 text-slate-700 dark:text-slate-400",
+    dot: "bg-slate-500",
+    border: "border-slate-500/30",
   },
 }
 
@@ -116,9 +116,9 @@ export function TablesManager({
     const occupied = tables.filter((t) => t.status === "occupied").length
     const available = tables.filter((t) => t.status === "available").length
     const reserved = tables.filter((t) => t.status === "reserved").length
-    const cleaning = tables.filter((t) => t.status === "cleaning").length
+    const unavailable = tables.filter((t) => t.status === "unavailable").length
     const utilization = total > 0 ? Math.round((occupied / total) * 100) : 0
-    return { total, occupied, available, reserved, cleaning, utilization }
+    return { total, occupied, available, reserved, unavailable, utilization }
   }, [tables])
 
   const onStatusChange = (id: string, status: TableStatus) => {
@@ -168,7 +168,7 @@ export function TablesManager({
 
       {/* Status summary */}
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        {(["available", "occupied", "reserved", "cleaning"] as TableStatus[]).map((status) => {
+        {(["available", "occupied", "reserved", "unavailable"] as TableStatus[]).map((status) => {
           const s = STATUS_STYLES[status]
           const value = stats[status as keyof typeof stats] as number
           const active = statusFilter === status
@@ -392,7 +392,7 @@ function TableCard({
                 <SelectItem value="available">Available</SelectItem>
                 <SelectItem value="occupied">Occupied</SelectItem>
                 <SelectItem value="reserved">Reserved</SelectItem>
-                <SelectItem value="cleaning">Cleaning</SelectItem>
+                <SelectItem value="unavailable">Unavailable</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -490,7 +490,7 @@ function TableFormDialog({
                   <option value="available">Available</option>
                   <option value="occupied">Occupied</option>
                   <option value="reserved">Reserved</option>
-                  <option value="cleaning">Cleaning</option>
+                  <option value="unavailable">Unavailable</option>
                 </select>
               </div>
             )}

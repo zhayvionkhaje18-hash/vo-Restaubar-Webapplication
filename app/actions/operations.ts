@@ -247,7 +247,7 @@ export async function processPayment(input: {
   // free up the table
   const { data: order } = await supabase.from("orders").select("table_id").eq("id", input.order_id).single()
   if (order?.table_id) {
-    await supabase.from("tables").update({ status: "cleaning" }).eq("id", order.table_id)
+    await supabase.from("tables").update({ status: "unavailable" }).eq("id", order.table_id)
   }
 
   await logActivity("payment", "order", `Collected payment via ${input.method}`)

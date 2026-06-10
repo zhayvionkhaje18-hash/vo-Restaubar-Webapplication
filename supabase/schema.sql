@@ -69,8 +69,8 @@ create table public.tables (
   label text not null unique,            -- e.g. "A-1", "Patio-3"
   seats int not null check (seats > 0),
   zone text,                             -- e.g. "Indoor", "Patio", "Bar"
-  status text not null default 'available'
-    check (status in ('available','occupied','reserved','cleaning')),
+status text not null default 'available'
+     check (status in ('available','occupied','reserved','unavailable')),
   assigned_waiter uuid references public.profiles(id) on delete set null,
   current_order_id uuid,
   notes text,
