@@ -61,6 +61,41 @@ import {
   toggleMenuItemAvailabilityAction,
 } from "@/app/actions/admin"
 
+// Compress image client-side before upload (max 800px, 75% JPEG quality)
+async function compressImage(file: File, maxDim = 800, quality = 0.75): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      let { width, height } = img
+      if (width > maxDim || height > maxDim) {
+        const ratio = Math.min(maxDim / width, maxDim / height)
+        width = Math.round(width * ratio)
+        height = Math.round(height * ratio)
+      }
+      const canvas = document.createElement("canvas")
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext("2d")!
+      ctx.drawImage(img, 0, 0, width, height)
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob)
+          else reject(new Error("Compression failed"))
+        },
+        "image/jpeg",
+        quality
+      )
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error("Failed to load image"))
+    }
+    img.src = url
+  })
+}
+
 type ItemWithCategory = MenuItem & { category: Category | null }
 
 export function MenuManager({
@@ -542,6 +577,8 @@ function ItemFormDialog({
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [removeImage, setRemoveImage] = useState(false)
+  const [compressing, setCompressing] = useState(false)
+  const [compressedSize, setCompressedSize] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   // Controlled Select state for category
@@ -553,6 +590,8 @@ function ItemFormDialog({
       setImageFile(null)
       setImagePreview(null)
       setRemoveImage(false)
+      setCompressing(false)
+      setCompressedSize(null)
       setError(null)
       setSelectedCategoryId(item?.category_id ?? "none")
     }
@@ -571,11 +610,12 @@ function ItemFormDialog({
   const showExisting = existingImage && !imageFile && !removeImage
   const showPreview = !!imagePreview
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) {
       setImageFile(null)
       setImagePreview(null)
+      setCompressedSize(null)
       return
     }
     if (!file.type.startsWith("image/")) {
@@ -590,11 +630,28 @@ function ItemFormDialog({
     }
     setError(null)
     setRemoveImage(false)
+
+    // Clean up old preview URL
     if (imagePreview && imagePreview.startsWith("blob:")) {
       URL.revokeObjectURL(imagePreview)
     }
-    setImageFile(file)
-    setImagePreview(URL.createObjectURL(file))
+
+    // Compress image client-side
+    setCompressing(true)
+    try {
+      const compressed = await compressImage(file)
+      const compressedFile = new File([compressed], `menu-${Date.now()}.jpg`, { type: "image/jpeg" })
+      setCompressedSize(compressedFile.size)
+      setImageFile(compressedFile)
+      setImagePreview(URL.createObjectURL(compressedFile))
+    } catch {
+      // Fallback to original if compression fails
+      console.warn("Image compression failed, using original")
+      setCompressedSize(null)
+      setImageFile(file)
+      setImagePreview(URL.createObjectURL(file))
+    }
+    setCompressing(false)
   }
 
   const clearNewFile = () => {
@@ -603,6 +660,7 @@ function ItemFormDialog({
     }
     setImageFile(null)
     setImagePreview(null)
+    setCompressedSize(null)
     if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
@@ -789,12 +847,18 @@ function ItemFormDialog({
                   )}
                   {imageFile && (
                     <p className="break-all text-xs text-muted-foreground">
-                      Selected: {imageFile.name} ({(imageFile.size / 1024).toFixed(0)} KB)
+                      {compressing ? (
+                        "Compressing..."
+                      ) : compressedSize && compressedSize < imageFile.size ? (
+                        <>Compressed: {(compressedSize / 1024).toFixed(0)} KB (saved {((1 - compressedSize / imageFile.size) * 100).toFixed(0)}%)</>
+                      ) : (
+                        <>Selected: {imageFile.name} ({(imageFile.size / 1024).toFixed(0)} KB)</>
+                      )}
                     </p>
                   )}
                   {!imageFile && !showExisting && (
                     <p className="text-xs text-muted-foreground">
-                      JPEG, PNG, WebP, or GIF • max 5MB
+                      JPEG, PNG, WebP, or GIF • Auto-compressed to ~75% JPEG • max 5MB
                     </p>
                   )}
                 </div>
@@ -833,11 +897,11 @@ function ItemFormDialog({
           )}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={pending || compressing}>
               Cancel
             </Button>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Saving..." : item ? "Save Changes" : "Create Item"}
+            <Button type="submit" disabled={pending || compressing}>
+              {pending ? "Saving..." : compressing ? "Compressing..." : item ? "Save Changes" : "Create Item"}
             </Button>
           </DialogFooter>
         </form>
