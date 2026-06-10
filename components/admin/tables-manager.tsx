@@ -133,8 +133,14 @@ export function TablesManager({
       prev.map((t) => (t.id === id ? { ...t, status } : t))
     )
     startTransition(async () => {
-      await updateTableStatusAction(id, status)
-      router.refresh()
+      const result = await updateTableStatusAction(id, status)
+      if (result?.error) {
+        console.error("Failed to update status:", result.error)
+        // Revert local state on error
+        setLocalTables(tables)
+      } else {
+        router.refresh()
+      }
     })
   }
 
