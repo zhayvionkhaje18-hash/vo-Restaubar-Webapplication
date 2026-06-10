@@ -151,17 +151,34 @@ function OrderStatusTracker({ token }: { token: string | null }) {
 // ============================================================
 function WelcomeModal({
   table,
+  tableCode,
   onSubmit,
 }: {
   table: RestaurantTable | null
+  tableCode: string | null
   onSubmit: (name: string) => void
 }) {
   const [name, setName] = useState("")
+  const [code, setCode] = useState("")
+  const [codeError, setCodeError] = useState("")
   const [loading, setLoading] = useState(false)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim()) return
+    
+    // Verify table code
+    if (!tableCode) {
+      setCodeError("Table code not available. Please contact staff.")
+      return
+    }
+    
+    if (code.trim() !== tableCode) {
+      setCodeError("Invalid table code. Please check the code on your table.")
+      return
+    }
+    
+    setCodeError("")
     setLoading(true)
     onSubmit(name.trim())
   }
@@ -200,11 +217,37 @@ function WelcomeModal({
               </div>
             )}
 
-            {/* Name Input */}
+            {/* Code + Name Input */}
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Table Code Input */}
+              <div className="text-left">
+                <Label htmlFor="tableCode" className="text-sm font-medium">
+                  Table Code *
+                </Label>
+                <Input
+                  id="tableCode"
+                  placeholder="Enter 4-digit code"
+                  value={code}
+                  onChange={(e) => {
+                    setCode(e.target.value.replace(/\D/g, '').slice(0, 4))
+                    setCodeError("")
+                  }}
+                  className="mt-1.5 h-12 text-center text-2xl font-black tracking-widest"
+                  maxLength={4}
+                  required
+                />
+                {codeError && (
+                  <p className="mt-1 text-xs text-destructive">{codeError}</p>
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Find the code on your table&apos;s QR card
+                </p>
+              </div>
+
+              {/* Name Input */}
               <div className="text-left">
                 <Label htmlFor="customerName" className="text-sm font-medium">
-                  Your Name
+                  Your Name *
                 </Label>
                 <Input
                   id="customerName"
@@ -213,7 +256,6 @@ function WelcomeModal({
                   onChange={(e) => setName(e.target.value)}
                   className="mt-1.5 h-12 text-base"
                   autoComplete="name"
-                  autoFocus
                   required
                 />
               </div>
@@ -222,7 +264,7 @@ function WelcomeModal({
                 type="submit"
                 size="lg"
                 className="w-full h-12 text-base font-semibold"
-                disabled={!name.trim() || loading}
+                disabled={!name.trim() || code.length !== 4 || loading}
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
@@ -742,7 +784,7 @@ function CustomerOrderContent() {
 
   // Welcome modal
   if (showWelcome) {
-    return <WelcomeModal table={table} onSubmit={handleWelcomeSubmit} />
+    return <WelcomeModal table={table} tableCode={(table as any).table_code} onSubmit={handleWelcomeSubmit} />
   }
 
   // Filtered menu

@@ -37,6 +37,7 @@ export interface RestaurantTable {
   seats: number
   zone: string | null
   status: TableStatus
+  table_code: string | null
   assigned_waiter: string | null
   current_order_id: string | null
   notes: string | null

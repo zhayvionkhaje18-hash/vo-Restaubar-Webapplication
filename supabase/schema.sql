@@ -67,10 +67,11 @@ create index idx_profiles_role on public.profiles(role);
 create table public.tables (
   id uuid primary key default gen_random_uuid(),
   label text not null unique,            -- e.g. "A-1", "Patio-3"
+  table_code text not null unique,       -- 4-digit code for customer verification
   seats int not null check (seats > 0),
   zone text,                             -- e.g. "Indoor", "Patio", "Bar"
-status text not null default 'available'
-     check (status in ('available','occupied','reserved','unavailable')),
+  status text not null default 'available'
+    check (status in ('available','occupied','reserved','unavailable')),
   assigned_waiter uuid references public.profiles(id) on delete set null,
   current_order_id uuid,
   notes text,
@@ -309,6 +310,22 @@ begin
 end;
 $$;
 
+-- Generate 4-digit table code
+create or replace function public.generate_table_code()
+returns text language plpgsql as $$
+declare
+  code text;
+begin
+  -- Generate random 4-digit code, ensure it's unique
+  code := lpad((floor(random() * 9000 + 1000))::text, 4, '0');
+  -- If exists, try again (max 100 attempts)
+  while exists (select 1 from public.tables where table_code = code) loop
+    code := lpad((floor(random() * 9000 + 1000))::text, 4, '0');
+  end loop;
+  return code;
+end;
+$$;
+
 -- Auto-create profile on new user signup
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
@@ -540,20 +557,20 @@ create policy "staff_delete"         on storage.objects for delete using (public
 -- SEED DATA
 -- ============================================================
 
--- Default tables
-insert into public.tables (label, seats, zone, status) values
-  ('A-1', 2, 'Indoor',  'available'),
-  ('A-2', 2, 'Indoor',  'available'),
-  ('A-3', 4, 'Indoor',  'available'),
-  ('A-4', 4, 'Indoor',  'available'),
-  ('A-5', 6, 'Indoor',  'available'),
-  ('B-1', 2, 'Bar',     'available'),
-  ('B-2', 2, 'Bar',     'available'),
-  ('B-3', 4, 'Bar',     'available'),
-  ('P-1', 4, 'Patio',   'available'),
-  ('P-2', 4, 'Patio',   'available'),
-  ('P-3', 6, 'Patio',   'available'),
-  ('V-1', 8, 'VIP',     'available');
+-- Default tables (with auto-generated 4-digit codes)
+insert into public.tables (label, table_code, seats, zone, status) values
+  ('A-1', '1234', 2, 'Indoor',  'available'),
+  ('A-2', '2345', 2, 'Indoor',  'available'),
+  ('A-3', '3456', 4, 'Indoor',  'available'),
+  ('A-4', '4567', 4, 'Indoor',  'available'),
+  ('A-5', '5678', 6, 'Indoor',  'available'),
+  ('B-1', '6789', 2, 'Bar',     'available'),
+  ('B-2', '7890', 2, 'Bar',     'available'),
+  ('B-3', '8901', 4, 'Bar',     'available'),
+  ('P-1', '9012', 4, 'Patio',   'available'),
+  ('P-2', '0123', 4, 'Patio',   'available'),
+  ('P-3', '1357', 6, 'Patio',   'available'),
+  ('V-1', '2468', 8, 'VIP',     'available');
 
 -- Default categories
 insert into public.categories (name, description, sort_order) values

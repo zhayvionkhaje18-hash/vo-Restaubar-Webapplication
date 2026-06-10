@@ -190,6 +190,12 @@ function QRCard({
           </div>
         </div>
 
+        {/* Table Code */}
+        <div className="rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 px-4 py-2">
+          <p className="text-[0.6rem] uppercase tracking-wider text-muted-foreground">Table Code</p>
+          <p className="text-2xl font-black tracking-widest text-primary">{(table as any).table_code || "----"}</p>
+        </div>
+
         <div className="flex flex-col gap-1 text-[0.65rem] text-muted-foreground print:hidden">
           <span>Scan to view menu & order</span>
           {token && (
