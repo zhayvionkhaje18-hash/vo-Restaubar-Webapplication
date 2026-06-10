@@ -84,14 +84,6 @@ export const ReceiptPrint = forwardRef<HTMLDivElement, { receipt: ReceiptDetails
       >
         {/* ── Header ── */}
         <div style={{ textAlign: "center", marginBottom: "16px" }}>
-          {r.restaurant.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={r.restaurant.logo_url}
-              alt="logo"
-              style={{ height: "48px", marginBottom: "6px", objectFit: "contain" }}
-            />
-          ) : null}
           <div style={{ fontSize: "16px", fontWeight: "bold", letterSpacing: "0.5px", lineHeight: "1.2" }}>
             {r.restaurant.name?.toUpperCase() ?? "RESTAURANT"}
           </div>

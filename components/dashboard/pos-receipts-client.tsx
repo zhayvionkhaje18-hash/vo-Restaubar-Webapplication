@@ -53,12 +53,6 @@ type ReceiptWithOrder = {
   } | null
 }
 
-interface PayDialog {
-  open: boolean
-  method: "cash" | "card" | "gcash" | "maya"
-  amountTendered: string
-}
-
 export function PosReceiptsClient({
   profile,
   initialReceipts,
@@ -72,7 +66,8 @@ export function PosReceiptsClient({
   const [fullReceipt, setFullReceipt] = useState<ReceiptDetails | null>(null)
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [downloading, setDownloading] = useState(false)
-  const receiptRef = useRef<HTMLDivElement>(null)
+  // Ref points directly to the ReceiptPrint div so html2canvas captures the exact content
+  const receiptPrintRef = useRef<HTMLDivElement>(null)
 
   const filtered = initialReceipts.filter((r) => {
     if (!search) return true
@@ -111,25 +106,38 @@ export function PosReceiptsClient({
   }
 
   const handlePrint = () => {
+    if (!receiptPrintRef.current) return
+    // Temporarily remove background for print-friendly output
+    const el = receiptPrintRef.current
+    const origBg = el.style.backgroundColor
+    el.style.backgroundColor = "#ffffff"
     window.print()
+    // Restore after print dialog closes
+    el.style.backgroundColor = origBg
   }
 
   const handleDownloadImage = async () => {
-    if (!receiptRef.current) return
+    if (!receiptPrintRef.current) {
+      alert("Receipt not ready yet. Please wait for it to load.")
+      return
+    }
     setDownloading(true)
     try {
-      const canvas = await html2canvas(receiptRef.current, {
+      const canvas = await html2canvas(receiptPrintRef.current, {
         scale: 3,
         backgroundColor: "#ffffff",
         useCORS: true,
         logging: false,
+        // Ensure the full receipt height is captured
+        height: receiptPrintRef.current.scrollHeight + 4,
+        width: receiptPrintRef.current.scrollWidth + 4,
       })
       const link = document.createElement("a")
       link.download = `${fullReceipt?.receipt_number ?? "receipt"}-${Date.now()}.png`
       link.href = canvas.toDataURL("image/png")
       link.click()
     } catch (err) {
-      console.error("Failed to generate image", err)
+      console.error("Failed to generate image:", err)
       alert("Failed to generate image. Please try again.")
     } finally {
       setDownloading(false)
@@ -138,19 +146,22 @@ export function PosReceiptsClient({
 
   return (
     <>
-      {/* Print-only stylesheet: show only the receipt */}
+      {/* Print stylesheet: when printing, show only the receipt content, strip all UI */}
       <style>{`
         @media print {
-          body * { visibility: hidden; }
-          #receipt-print-target,
-          #receipt-print-target * { visibility: visible; }
-          #receipt-print-target {
+          body > * { display: none !important; }
+          #receipt-print-root { display: block !important; }
+          #receipt-print-root * { visibility: visible; }
+          #receipt-print-root {
             position: fixed;
             top: 0;
             left: 0;
-            width: 280px;
+            width: 100%;
           }
-          @page { margin: 0; size: 80mm auto; }
+          @page {
+            margin: 0;
+            size: 80mm 200mm; /* width x height — height auto-adjusts per content */
+          }
         }
       `}</style>
 
@@ -270,19 +281,18 @@ export function PosReceiptsClient({
             )}
           </DialogHeader>
 
-          {/* Receipt Preview Area */}
-          <div className="flex justify-center bg-muted/20 rounded-lg p-4">
+          {/* Receipt Preview — ref goes on the actual ReceiptPrint div */}
+          <div
+            id="receipt-print-root"
+            className="flex justify-center bg-muted/20 rounded-lg p-4 overflow-x-auto"
+          >
             {loadingDetails ? (
               <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
                 <Loader2 className="size-6 animate-spin" />
                 <span className="text-sm">Loading receipt...</span>
               </div>
             ) : fullReceipt ? (
-              <div
-                id="receipt-print-target"
-                ref={receiptRef}
-                className="flex justify-center"
-              >
+              <div ref={receiptPrintRef}>
                 <ReceiptPrint receipt={fullReceipt} />
               </div>
             ) : (
