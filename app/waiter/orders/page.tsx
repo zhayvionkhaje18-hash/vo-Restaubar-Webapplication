@@ -2,17 +2,21 @@ import { redirect } from "next/navigation"
 import { getSessionProfile } from "@/lib/auth"
 import { getWaiterOrders } from "@/app/actions/waiter"
 import { WaiterOrdersClient } from "@/components/dashboard/waiter-orders-client"
+import type { Profile } from "@/lib/types"
 
 export const dynamic = "force-dynamic"
 
 export default async function WaiterOrdersPage() {
-  const profile = await getSessionProfile()
-
-  if (!profile) redirect("/login")
-  if (profile.role !== "waiter") redirect("/")
+  const session = await getSessionProfile()
+  if (!session) {
+    redirect("/login")
+  }
+  if (session.role !== "waiter") {
+    redirect("/")
+  }
+  const profile = session as Profile
 
   const { orders } = await getWaiterOrders()
 
-  // TypeScript doesn't narrow after redirect() — use non-null assertion
-  return <WaiterOrdersClient profile={profile!} initialOrders={orders ?? []} />
+  return <WaiterOrdersClient profile={profile} initialOrders={orders ?? []} />
 }
