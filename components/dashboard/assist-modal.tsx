@@ -260,18 +260,17 @@ export function AssistModal({
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
-        className="max-w-5xl p-0 gap-0 overflow-hidden"
-        style={{ maxHeight: "90vh", height: "90vh" }}
+        className="w-[95vw] max-w-6xl h-[90vh] p-0 gap-0 overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-5 py-3 shrink-0">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between border-b px-6 py-4 shrink-0">
+          <div className="flex items-center gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold">Order #{localOrder.order_number}</h2>
+                <h2 className="text-xl font-bold">Order #{localOrder.order_number}</h2>
                 <Badge className={statusCfg?.color ?? "bg-gray-100"}>{statusCfg?.label}</Badge>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground mt-0.5">
                 {localOrder.tables?.label
                   ? `${localOrder.tables.label}${localOrder.tables.zone ? ` (${localOrder.tables.zone})` : ""}`
                   : "No table"}
@@ -287,27 +286,27 @@ export function AssistModal({
         </div>
 
         {/* Body: Menu + Order Summary side by side */}
-        <div className="flex flex-1 overflow-hidden" style={{ height: "calc(90vh - 130px)" }}>
-          {/* Left: Menu Browser */}
+        <div className="flex flex-1 overflow-hidden" style={{ height: "calc(90vh - 140px)" }}>
+          {/* Left: Menu Browser — takes MOST of the space */}
           <div className="flex-1 border-r flex flex-col overflow-hidden">
             {/* Search */}
-            <div className="px-4 py-3 border-b shrink-0">
+            <div className="px-5 py-4 border-b shrink-0">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search menu..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 h-9"
+                  className="pl-10 h-10"
                 />
               </div>
             </div>
 
             {/* Category Tabs */}
-            <div className="flex gap-2 px-4 pt-3 pb-2 overflow-x-auto shrink-0 border-b">
+            <div className="flex gap-2 px-5 pt-4 pb-3 overflow-x-auto shrink-0 border-b">
               <button
                 onClick={() => setActiveCategory("all")}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors shrink-0 ${
+                className={`px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors shrink-0 ${
                   activeCategory === "all"
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -319,7 +318,7 @@ export function AssistModal({
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors shrink-0 ${
+                  className={`px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors shrink-0 ${
                     activeCategory === cat.id
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -333,47 +332,51 @@ export function AssistModal({
             {/* Menu Items Grid */}
             <ScrollArea className="flex-1">
               {loadingMenu ? (
-                <div className="p-4 space-y-3">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="rounded-lg border p-4 animate-pulse h-20 bg-muted/30" />
+                <div className="p-5 grid grid-cols-3 gap-4">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="rounded-xl border p-5 animate-pulse h-28 bg-muted/30" />
                   ))}
                 </div>
               ) : filteredItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                  <UtensilsCrossed className="size-8 opacity-30 mb-2" />
-                  <p className="text-sm">No items found</p>
+                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                  <UtensilsCrossed className="size-10 opacity-30 mb-3" />
+                  <p className="text-base font-medium">No items found</p>
                 </div>
               ) : (
-                <div className="p-4 space-y-2">
+                <div className="p-5 grid grid-cols-3 gap-4">
                   {filteredItems.map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-lg border bg-card px-4 py-3 flex items-center justify-between gap-3 hover:border-primary/50 transition-colors"
+                      className="rounded-xl border bg-card px-5 py-4 flex flex-col justify-between hover:border-primary/50 transition-colors cursor-pointer"
+                      onClick={() => handleAddItem(item)}
                     >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-base leading-tight">{item.name}</p>
+                      <div className="flex-1">
+                        <p className="font-bold text-base leading-snug">{item.name}</p>
                         {item.description && (
-                          <p className="text-xs text-muted-foreground mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                             {item.description}
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <span className="text-sm font-bold text-primary whitespace-nowrap">
+                      <div className="flex items-center justify-between mt-3">
+                        <span className="text-base font-bold text-primary">
                           {formatCurrency(item.price)}
                         </span>
                         <Button
                           size="sm"
-                          onClick={() => handleAddItem(item)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleAddItem(item)
+                          }}
                           disabled={addingItem === item.id}
-                          className="h-8 px-3 gap-1.5"
+                          className="h-8 px-4 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
                           {addingItem === item.id ? (
                             <Loader2 className="size-3.5 animate-spin" />
                           ) : (
                             <Plus className="size-3.5" />
                           )}
-                          <span className="text-xs">Add</span>
+                          <span className="text-xs font-medium">Add</span>
                         </Button>
                       </div>
                     </div>
@@ -383,31 +386,31 @@ export function AssistModal({
             </ScrollArea>
           </div>
 
-          {/* Right: Order Summary */}
-          <div className="w-80 flex flex-col shrink-0">
-            <div className="px-4 py-3 border-b shrink-0">
-              <h3 className="font-semibold text-sm">Customer Order</h3>
+          {/* Right: Order Summary — sidebar panel */}
+          <div className="w-96 flex flex-col shrink-0">
+            <div className="px-5 py-4 border-b shrink-0">
+              <h3 className="font-semibold text-base">Customer Order</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Review with customer · add more items if needed
               </p>
             </div>
 
             <ScrollArea className="flex-1">
-              <div className="p-3 space-y-2">
+              <div className="p-4 space-y-2">
                 {(localOrder.order_items ?? []).length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <UtensilsCrossed className="size-8 opacity-30 mx-auto mb-2" />
-                    <p className="text-sm">No items yet</p>
-                    <p className="text-xs">Add items from the menu</p>
+                  <div className="text-center py-12 text-muted-foreground">
+                    <UtensilsCrossed className="size-10 opacity-30 mx-auto mb-3" />
+                    <p className="text-sm font-medium">No items yet</p>
+                    <p className="text-xs mt-1">Tap menu items to add</p>
                   </div>
                 ) : (
                   localOrder.order_items?.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-start gap-2 p-2 rounded-lg bg-muted/30"
+                      className="flex items-start gap-3 p-3 rounded-xl bg-muted/30"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium leading-tight">{item.name}</p>
+                        <p className="text-sm font-semibold leading-tight">{item.name}</p>
                         {item.notes && (
                           <p className="text-xs text-muted-foreground mt-0.5">{item.notes}</p>
                         )}
@@ -421,15 +424,15 @@ export function AssistModal({
                         <Button
                           size="sm"
                           variant="outline"
-                          className="size-7 p-0"
+                          className="size-8 p-0"
                           onClick={() => handleUpdateQty(item.id, item.quantity - 1)}
                           disabled={updatingItem === item.id}
                         >
-                          <Minus className="size-3" />
+                          <Minus className="size-3.5" />
                         </Button>
-                        <span className="text-sm font-medium w-6 text-center">
+                        <span className="text-sm font-semibold w-8 text-center">
                           {updatingItem === item.id ? (
-                            <Loader2 className="size-3 animate-spin mx-auto" />
+                            <Loader2 className="size-3.5 animate-spin mx-auto" />
                           ) : (
                             item.quantity
                           )}
@@ -437,20 +440,20 @@ export function AssistModal({
                         <Button
                           size="sm"
                           variant="outline"
-                          className="size-7 p-0"
+                          className="size-8 p-0"
                           onClick={() => handleUpdateQty(item.id, item.quantity + 1)}
                           disabled={updatingItem === item.id}
                         >
-                          <Plus className="size-3" />
+                          <Plus className="size-3.5" />
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="size-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                          className="size-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
                           onClick={() => handleDeleteItem(item.id)}
                           disabled={updatingItem === item.id}
                         >
-                          <Trash2 className="size-3" />
+                          <Trash2 className="size-3.5" />
                         </Button>
                       </div>
                     </div>
@@ -460,16 +463,16 @@ export function AssistModal({
             </ScrollArea>
 
             {/* Totals */}
-            <div className="border-t px-4 py-3 shrink-0 space-y-1.5">
+            <div className="border-t px-5 py-4 shrink-0 space-y-2 bg-muted/20">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatCurrency(localOrder.subtotal || 0)}</span>
+                <span className="font-medium">{formatCurrency(localOrder.subtotal || 0)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Tax (12%)</span>
-                <span>{formatCurrency(localOrder.tax || 0)}</span>
+                <span className="font-medium">{formatCurrency(localOrder.tax || 0)}</span>
               </div>
-              <div className="flex justify-between font-bold text-base border-t pt-1.5">
+              <div className="flex justify-between font-bold text-lg border-t pt-2">
                 <span>Total</span>
                 <span className="text-primary">{formatCurrency(localOrder.total || 0)}</span>
               </div>
