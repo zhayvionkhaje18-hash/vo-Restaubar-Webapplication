@@ -226,6 +226,86 @@ export async function processPosPayment(input: {
 }
 
 // ============================================================
+// ADD ITEM TO ORDER (POS / waiter shared action)
+// ============================================================
+export async function addPosOrderItem(input: {
+  order_id: string
+  menu_item_id: string
+  name: string
+  price: number
+  quantity: number
+  notes?: string
+}) {
+  const supabase = await createClient()
+  const profile = await getSessionProfile()
+
+  if (!profile) return { error: "Not authenticated" }
+  if (!["pos", "waiter", "admin"].includes(profile.role)) return { error: "Not authorized" }
+
+  const { error: insertErr } = await supabase.from("order_items").insert({
+    order_id: input.order_id,
+    menu_item_id: input.menu_item_id || null,
+    name: input.name,
+    unit_price: input.price,
+    quantity: input.quantity,
+    notes: input.notes ?? null,
+    status: "pending" as OrderStatus,
+  })
+  if (insertErr) return { error: insertErr.message }
+
+  // Recalculate totals
+  const { data: items } = await supabase
+    .from("order_items")
+    .select("unit_price, quantity")
+    .eq("order_id", input.order_id)
+
+  const subtotal = (items ?? []).reduce((s, i) => s + Number(i.unit_price) * i.quantity, 0)
+  const tax = Math.round(subtotal * TAX_RATE * 100) / 100
+  const total = Math.round((subtotal + tax) * 100) / 100
+
+  await supabase
+    .from("orders")
+    .update({ subtotal, tax, total })
+    .eq("id", input.order_id)
+
+  await supabase.rpc("log_activity", {
+    p_action: "order.item_added",
+    p_entity: "order",
+    p_entity_id: input.order_id,
+    p_detail: { item: input.name, qty: input.quantity, price: input.price, added_by: profile.full_name },
+  })
+
+  revalidatePath("/pos")
+  revalidatePath("/pos/orders")
+  return { success: true }
+}
+
+// ============================================================
+// GET POS MENU (for menu browser modal)
+// ============================================================
+export async function getPosMenu() {
+  const supabase = await createClient()
+
+  const [categories, menuItems] = await Promise.all([
+    supabase
+      .from("categories")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order"),
+    supabase
+      .from("menu_items")
+      .select("*")
+      .eq("is_available", true)
+      .order("name"),
+  ])
+
+  return {
+    categories: categories.data ?? [],
+    menuItems: menuItems.data ?? [],
+  }
+}
+
+// ============================================================
 // GET POS DATA (for dashboard loading)
 // ============================================================
 export async function getPosData() {

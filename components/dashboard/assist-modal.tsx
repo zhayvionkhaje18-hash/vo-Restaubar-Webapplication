@@ -70,6 +70,36 @@ interface MenuCategory {
   sort_order: number
 }
 
+interface MenuItem {
+  id: string
+  name: string
+  description: string | null
+  price: number
+  image_url: string | null
+  category_id: string | null
+  is_available: boolean
+}
+
+export interface MenuBrowserModalProps {
+  open: boolean
+  onClose: () => void
+  orderId: string
+  onItemAdded: (item: MenuItem) => void
+  getMenu: () => Promise<{
+    categories: MenuCategory[]
+    menuItems: MenuItem[]
+    error?: string
+  }>
+  addItem: (input: {
+    order_id: string
+    menu_item_id: string
+    name: string
+    price: number
+    quantity: number
+    notes?: string
+  }) => Promise<{ error?: string }>
+}
+
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string }> = {
   pending:   { label: "Pending Review",  color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
   confirmed: { label: "Confirmed",      color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
@@ -87,12 +117,9 @@ function MenuBrowserModal({
   onClose,
   orderId,
   onItemAdded,
-}: {
-  open: boolean
-  onClose: () => void
-  orderId: string
-  onItemAdded: (item: MenuItem) => void
-}) {
+  getMenu,
+  addItem,
+}: MenuBrowserModalProps) {
   const [categories, setCategories] = useState<MenuCategory[]>([])
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -103,14 +130,14 @@ function MenuBrowserModal({
   useEffect(() => {
     if (!open) return
     setLoading(true)
-    getWaiterMenu().then((result) => {
+    getMenu().then((result) => {
       if (!result.error) {
-        setCategories(result.categories as MenuCategory[])
-        setMenuItems(result.menuItems as MenuItem[])
+        setCategories(result.categories)
+        setMenuItems(result.menuItems)
       }
       setLoading(false)
     })
-  }, [open])
+  }, [open, getMenu])
 
   const filteredItems = menuItems.filter((item) => {
     const matchesCategory = activeCategory === "all" || item.category_id === activeCategory
@@ -123,7 +150,7 @@ function MenuBrowserModal({
       if (addingItem === item.id) return // Prevent double-click
       setAddingItem(item.id)
       try {
-        const result = await addWaiterOrderItem({
+        const result = await addItem({
           order_id: orderId,
           menu_item_id: item.id,
           name: item.name,
@@ -139,7 +166,7 @@ function MenuBrowserModal({
         setAddingItem(null)
       }
     },
-    [orderId, onItemAdded, addingItem]
+    [orderId, onItemAdded, addItem, addingItem]
   )
 
   return (
@@ -555,6 +582,8 @@ export function AssistModal({
         onClose={() => setShowMenuModal(false)}
         orderId={localOrder.id}
         onItemAdded={handleItemAdded}
+        getMenu={getWaiterMenu}
+        addItem={addWaiterOrderItem}
       />
     </>
   )

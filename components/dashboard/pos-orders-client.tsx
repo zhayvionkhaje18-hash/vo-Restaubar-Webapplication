@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useCallback } from "react"
 import {
   ChefHat,
   Check,
@@ -13,6 +13,7 @@ import {
   X,
   UtensilsCrossed,
   AlertCircle,
+  Plus,
 } from "lucide-react"
 import { StaffShell, type NavItem } from "@/components/staff-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -45,7 +46,10 @@ import {
   updatePosOrderStatus,
   cancelPosOrder,
   processPosPayment,
+  getPosMenu,
+  addPosOrderItem,
 } from "@/app/actions/pos"
+import { MenuBrowserModal } from "@/components/dashboard/assist-modal"
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/pos", label: "POS Terminal", icon: "LayoutDashboard" },
@@ -104,6 +108,7 @@ export function PosOrdersClient({
     method: "cash",
     amountTendered: "",
   })
+  const [showMenuModal, setShowMenuModal] = useState(false)
 
   const filtered = orders.filter((o) => {
     if (!o.status) return false
@@ -160,6 +165,36 @@ export function PosOrdersClient({
     setSelectedOrder(order)
     setPayDialog({ open: true, method: "cash", amountTendered: "" })
   }
+
+  const handleMenuItemAdded = useCallback(
+    async (addedItem: { name: string; price: number; id: string }) => {
+      if (!selectedOrder) return
+      // Optimistically update the local order list
+      const newItem = {
+        id: `temp-${Date.now()}`,
+        name: addedItem.name,
+        unit_price: addedItem.price,
+        quantity: 1,
+        notes: null,
+        status: "pending",
+      }
+      const newSubtotal = (selectedOrder.subtotal || 0) + addedItem.price
+      const tax = Math.round(newSubtotal * TAX_RATE * 100) / 100
+      const newTotal = Math.round((newSubtotal + tax) * 100) / 100
+      const updated = {
+        ...selectedOrder,
+        order_items: [...(selectedOrder.order_items ?? []), newItem],
+        subtotal: newSubtotal,
+        tax,
+        total: newTotal,
+      }
+      setSelectedOrder(updated)
+      setOrders((prev) =>
+        prev.map((o) => (o.id === selectedOrder.id ? updated : o))
+      )
+    },
+    [selectedOrder]
+  )
 
   const confirmPayment = () => {
     if (!selectedOrder) return
@@ -315,48 +350,58 @@ export function PosOrdersClient({
               </p>
             </div>
           )}
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setSelectedOrder(null)}>
-              Close
+          <DialogFooter className="gap-2 sm:gap-0 flex-wrap">
+            <Button
+              onClick={() => setShowMenuModal(true)}
+              className="bg-emerald-600 hover:bg-emerald-700 order-1 sm:order-none"
+              disabled={!selectedOrder || selectedOrder.payment_status === "paid"}
+            >
+              <Plus className="size-3.5" />
+              <span className="ml-1.5">Add Items</span>
             </Button>
-            {selectedOrder && selectedOrder.payment_status !== "paid" && selectedOrder?.status && selectedOrder?.status !== "cancelled" && (
-              <>
-                <Button
-                  variant="destructive"
-                  onClick={() => selectedOrder && handleCancel(selectedOrder)}
-                  disabled={pending}
-                >
-                  <X className="size-3.5" />
-                  <span className="ml-1.5">Cancel</span>
-                </Button>
-                {selectedOrder?.status && NEXT_STATUS[selectedOrder.status as OrderStatus] && (
+            <div className="flex gap-2 ml-auto">
+              <Button variant="outline" onClick={() => setSelectedOrder(null)}>
+                Close
+              </Button>
+              {selectedOrder && selectedOrder.payment_status !== "paid" && selectedOrder?.status && selectedOrder?.status !== "cancelled" && (
+                <>
                   <Button
-                    onClick={() =>
-                      selectedOrder &&
-                      handleStatusUpdate(
-                        selectedOrder,
-                        NEXT_STATUS[selectedOrder?.status as OrderStatus]!
-                      )
-                    }
+                    variant="destructive"
+                    onClick={() => selectedOrder && handleCancel(selectedOrder)}
                     disabled={pending}
                   >
-                    {STATUS_ACTION[selectedOrder?.status as OrderStatus]?.icon}
-                    <span className="ml-1.5">
-                      {STATUS_ACTION[selectedOrder?.status as OrderStatus]?.label}
-                    </span>
+                    <X className="size-3.5" />
+                    <span className="ml-1.5">Cancel</span>
                   </Button>
-                )}
-                {selectedOrder?.status === "served" && (
-                  <Button
-                    onClick={() => selectedOrder && openPayDialog(selectedOrder)}
-                    disabled={pending}
-                  >
-                    <CreditCard className="size-3.5" />
-                    <span className="ml-1.5">Pay</span>
-                  </Button>
-                )}
-              </>
-            )}
+                  {selectedOrder?.status && NEXT_STATUS[selectedOrder.status as OrderStatus] && (
+                    <Button
+                      onClick={() =>
+                        selectedOrder &&
+                        handleStatusUpdate(
+                          selectedOrder,
+                          NEXT_STATUS[selectedOrder?.status as OrderStatus]!
+                        )
+                      }
+                      disabled={pending}
+                    >
+                      {STATUS_ACTION[selectedOrder?.status as OrderStatus]?.icon}
+                      <span className="ml-1.5">
+                        {STATUS_ACTION[selectedOrder?.status as OrderStatus]?.label}
+                      </span>
+                    </Button>
+                  )}
+                  {selectedOrder?.status === "served" && (
+                    <Button
+                      onClick={() => selectedOrder && openPayDialog(selectedOrder)}
+                      disabled={pending}
+                    >
+                      <CreditCard className="size-3.5" />
+                      <span className="ml-1.5">Pay</span>
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -466,6 +511,18 @@ export function PosOrdersClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Menu Browser Modal */}
+      {selectedOrder && (
+        <MenuBrowserModal
+          open={showMenuModal}
+          onClose={() => setShowMenuModal(false)}
+          orderId={selectedOrder.id}
+          onItemAdded={handleMenuItemAdded}
+          getMenu={getPosMenu}
+          addItem={addPosOrderItem}
+        />
+      )}
     </StaffShell>
   )
 }
