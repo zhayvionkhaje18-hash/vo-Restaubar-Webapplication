@@ -10,9 +10,11 @@ export default async function WaiterNotificationsPage() {
   const session = await getSessionProfile()
   if (!session) {
     redirect("/login")
+    return
   }
   if (session.role !== "waiter") {
     redirect("/")
+    return
   }
   const profile = session as Profile
 
