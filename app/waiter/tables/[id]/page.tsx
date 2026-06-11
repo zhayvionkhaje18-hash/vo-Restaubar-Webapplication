@@ -15,11 +15,9 @@ export default async function WaiterTableDetailPage({
 
   if (!profile) {
     redirect("/login")
-    return
   }
   if (profile.role !== "waiter") {
     redirect("/")
-    return
   }
 
   const [tableResult, menuData] = await Promise.all([

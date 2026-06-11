@@ -9,11 +9,9 @@ export default async function WaiterPage() {
 
   if (!profile) {
     redirect("/login")
-    return
   }
   if (profile.role !== "waiter") {
     redirect("/")
-    return
   }
 
   return <WaiterDashboard profile={profile} />

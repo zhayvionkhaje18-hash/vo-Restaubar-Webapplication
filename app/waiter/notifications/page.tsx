@@ -10,11 +10,9 @@ export default async function WaiterNotificationsPage() {
 
   if (!profile) {
     redirect("/login")
-    return
   }
   if (profile.role !== "waiter") {
     redirect("/")
-    return
   }
 
   const result = await getWaiterNotifications()
