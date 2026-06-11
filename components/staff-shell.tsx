@@ -72,9 +72,9 @@ function NavLinks({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => 
   return (
     <nav className="flex flex-col gap-0.5 px-3">
       {items.map((item) => {
-        // Exact match OR subpath match (but not for /admin root to avoid double highlights)
-        const isRootAdmin = item.href === "/admin"
-        const active = pathname === item.href || (!isRootAdmin && pathname.startsWith(item.href + "/"))
+        // Active when pathname exactly matches this item's href.
+        // Child pages (/waiter/orders) do NOT activate the parent (/waiter).
+        const active = pathname === item.href
         return (
           <Link
             key={item.href}
