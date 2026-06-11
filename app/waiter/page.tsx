@@ -17,4 +17,3 @@ export default async function WaiterPage() {
 
   return <WaiterDashboard profile={profile} />
 }
-}
