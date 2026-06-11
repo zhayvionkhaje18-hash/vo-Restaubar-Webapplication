@@ -291,23 +291,23 @@ export function AssistModal({
           {/* Left: Menu Browser */}
           <div className="flex-1 border-r flex flex-col overflow-hidden">
             {/* Search */}
-            <div className="p-3 border-b shrink-0">
+            <div className="px-4 py-3 border-b shrink-0">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Search menu..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 h-9"
                 />
               </div>
             </div>
 
             {/* Category Tabs */}
-            <div className="flex gap-1 px-3 pt-2 pb-1 overflow-x-auto shrink-0 border-b">
+            <div className="flex gap-2 px-4 pt-3 pb-2 overflow-x-auto shrink-0 border-b">
               <button
                 onClick={() => setActiveCategory("all")}
-                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors shrink-0 ${
                   activeCategory === "all"
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -319,7 +319,7 @@ export function AssistModal({
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors shrink-0 ${
                     activeCategory === cat.id
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -333,9 +333,9 @@ export function AssistModal({
             {/* Menu Items Grid */}
             <ScrollArea className="flex-1">
               {loadingMenu ? (
-                <div className="p-3 grid grid-cols-2 gap-3">
-                  {[1, 4, 6, 8].map((i) => (
-                    <div key={i} className="rounded-lg border p-3 animate-pulse h-24 bg-muted/30" />
+                <div className="p-4 space-y-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="rounded-lg border p-4 animate-pulse h-20 bg-muted/30" />
                   ))}
                 </div>
               ) : filteredItems.length === 0 ? (
@@ -344,35 +344,36 @@ export function AssistModal({
                   <p className="text-sm">No items found</p>
                 </div>
               ) : (
-                <div className="p-3 grid grid-cols-2 gap-3">
+                <div className="p-4 space-y-2">
                   {filteredItems.map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-lg border bg-card p-3 flex flex-col justify-between hover:border-primary/50 transition-colors"
+                      className="rounded-lg border bg-card px-4 py-3 flex items-center justify-between gap-3 hover:border-primary/50 transition-colors"
                     >
-                      <div>
-                        <p className="font-medium text-sm leading-tight">{item.name}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-base leading-tight">{item.name}</p>
                         {item.description && (
-                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                          <p className="text-xs text-muted-foreground mt-0.5">
                             {item.description}
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-sm font-semibold text-primary">
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-sm font-bold text-primary whitespace-nowrap">
                           {formatCurrency(item.price)}
                         </span>
                         <Button
                           size="sm"
                           onClick={() => handleAddItem(item)}
                           disabled={addingItem === item.id}
-                          className="size-7 p-0"
+                          className="h-8 px-3 gap-1.5"
                         >
                           {addingItem === item.id ? (
                             <Loader2 className="size-3.5 animate-spin" />
                           ) : (
                             <Plus className="size-3.5" />
                           )}
+                          <span className="text-xs">Add</span>
                         </Button>
                       </div>
                     </div>
