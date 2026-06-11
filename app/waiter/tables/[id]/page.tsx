@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation"
 import { getSessionProfile } from "@/lib/auth"
-import { getWaiterTableDetail } from "@/app/actions/waiter"
+import { getWaiterTableDetail, getWaiterMenu } from "@/app/actions/waiter"
 import { WaiterTableDetailClient } from "@/components/dashboard/waiter-table-detail-client"
 
 export const dynamic = "force-dynamic"
@@ -22,8 +22,20 @@ export default async function WaiterTableDetailPage({
     return
   }
 
-  const { table, orders, error } = await getWaiterTableDetail(id)
-  if (error || !table) notFound()
+  const [tableResult, menuData] = await Promise.all([
+    getWaiterTableDetail(id),
+    getWaiterMenu(),
+  ])
 
-  return <WaiterTableDetailClient profile={profile} table={table} initialOrders={orders} />
+  if (tableResult.error || !tableResult.table) notFound()
+
+  return (
+    <WaiterTableDetailClient
+      profile={profile}
+      table={tableResult.table}
+      initialOrders={tableResult.orders}
+      categories={menuData.categories}
+      menuItems={menuData.menuItems}
+    />
+  )
 }
