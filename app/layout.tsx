@@ -1,37 +1,67 @@
-import { Analytics } from '@vercel/analytics/next'
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
-import { Toaster } from '@/components/ui/sonner'
-import './globals.css'
+import { Analytics } from "@vercel/analytics/next"
+import type { Metadata, Viewport } from "next"
+import { Geist, Geist_Mono } from "next/font/google"
+import { Toaster } from "@/components/ui/sonner"
+import { PwaRegister } from "@/components/pwa-register"
+import "./globals.css"
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] })
 const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 })
 
 export const metadata: Metadata = {
-  title: 'Lumière — Restaurant & Bar Management System',
+  title: "Lumière — Restaurant & Bar Management System",
   description:
-    'An end-to-end restaurant and bar operations platform: POS, table & QR ordering, kitchen routing, payments, reservations, and real-time analytics.',
-  generator: 'v0.app',
+    "An end-to-end restaurant and bar operations platform: POS, table & QR ordering, kitchen routing, payments, reservations, and real-time analytics.",
+  generator: "v0.app",
+  manifest: "/manifest.json",
+  applicationName: "Lumière",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Lumière",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Lumière",
+    title: "Lumière — Restaurant & Bar Management System",
+    description:
+      "Restaurant & bar operations platform: POS, table orders, payments, reservations.",
+  },
   icons: {
     icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192x192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512x512.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: "/apple-icon.png",
+    other: [
       {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
+        url: "/apple-icon.png",
+        rel: "apple-touch-icon",
+        sizes: "180x180",
       },
       {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
+        url: "/icon-192x192.png",
+        rel: "icon",
+        sizes: "192x192",
+        type: "image/png",
       },
     ],
-    apple: '/apple-icon.png',
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#111111" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({
@@ -41,10 +71,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} bg-background`}>
+      <head>
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Lumière" />
+      </head>
       <body className="font-sans antialiased">
         {children}
         <Toaster richColors position="top-right" />
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <PwaRegister />
+        {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>
   )
