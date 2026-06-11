@@ -276,6 +276,7 @@ export function WaiterOrdersClient({
                   onAssist={() => handleAssist(order)}
                   pending={pending === order.id}
                   assisting={assisting === order.id}
+                  profile={profile}
                 />
               ))}
             </div>
@@ -411,6 +412,7 @@ function WaiterOrderCard({
   onAssist,
   pending,
   assisting,
+  profile,
 }: {
   order: WaiterOrder
   onView: () => void
@@ -418,6 +420,7 @@ function WaiterOrderCard({
   onAssist: () => void
   pending: boolean
   assisting: boolean
+  profile: Profile
 }) {
   const next = NEXT_STATUS[order.status as OrderStatus]
   const config = STATUS_CONFIG[order.status as OrderStatus]
