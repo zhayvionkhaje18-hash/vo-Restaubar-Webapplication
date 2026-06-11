@@ -149,22 +149,11 @@ function MenuBrowserModal({
         style={{ height: "min(90vh, 800px)" }}
       >
         {/* Header — fixed, never overlaps */}
-        <div className="flex items-center justify-between gap-3 border-b px-4 sm:px-6 py-3 sm:py-4 shrink-0">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg sm:text-xl font-bold truncate">Select Menu Items</h2>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Tap an item to add it to the order
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="shrink-0 size-9"
-            aria-label="Close menu"
-          >
-            <X className="size-5" />
-          </Button>
+        <div className="border-b px-4 sm:px-6 py-3 sm:py-4 shrink-0">
+          <h2 className="text-lg sm:text-xl font-bold">Select Menu Items</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            Tap an item to add it to the order
+          </p>
         </div>
 
         {/* Search — fixed */}
@@ -420,25 +409,6 @@ export function AssistModal({
               {" · "}
               {itemCount} item{itemCount !== 1 ? "s" : ""}
             </p>
-          </div>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 truncate">
-                {localOrder.tables?.label
-                  ? `${localOrder.tables.label}${localOrder.tables.zone ? ` (${localOrder.tables.zone})` : ""}`
-                  : "No table"}
-                {localOrder.customer_name ? ` · ${localOrder.customer_name}` : ""}
-                {" · "}
-                {itemCount} item{itemCount !== 1 ? "s" : ""}
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="shrink-0 size-9"
-              aria-label="Close"
-            >
-              <X className="size-5" />
-            </Button>
           </div>
 
           {/* Add Order Button — fixed */}
