@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react"
 import {
-  X,
   Search,
   Plus,
   Minus,
@@ -403,17 +402,25 @@ export function AssistModal({
     <>
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
         <DialogContent className="w-full sm:w-[90vw] md:max-w-xl max-h-[95vh] p-0 gap-0 overflow-hidden flex flex-col">
-          {/* Header — fixed */}
-          <div className="flex items-center justify-between gap-3 border-b px-4 sm:px-6 py-3 sm:py-4 shrink-0">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg sm:text-xl font-bold truncate">
-                  Order #{localOrder.order_number}
-                </h2>
-                <Badge className={`${statusCfg?.color ?? "bg-gray-100"} text-xs`}>
-                  {statusCfg?.label}
-                </Badge>
-              </div>
+{/* Header — fixed */}
+          <div className="border-b px-4 sm:px-6 py-3 sm:py-4 shrink-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg sm:text-xl font-bold truncate">
+                Order #{localOrder.order_number}
+              </h2>
+              <Badge className={`${statusCfg?.color ?? "bg-gray-100"} text-xs`}>
+                {statusCfg?.label}
+              </Badge>
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 truncate">
+              {localOrder.tables?.label
+                ? `${localOrder.tables.label}${localOrder.tables.zone ? ` (${localOrder.tables.zone})` : ""}`
+                : "No table"}
+              {localOrder.customer_name ? ` · ${localOrder.customer_name}` : ""}
+              {" · "}
+              {itemCount} item{itemCount !== 1 ? "s" : ""}
+            </p>
+          </div>
               <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 truncate">
                 {localOrder.tables?.label
                   ? `${localOrder.tables.label}${localOrder.tables.zone ? ` (${localOrder.tables.zone})` : ""}`
