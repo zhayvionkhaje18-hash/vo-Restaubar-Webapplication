@@ -39,6 +39,127 @@ export async function updateWaiterOrderStatus(orderId: string, status: OrderStat
 }
 
 // ============================================================
+// ASSIST / CLAIM ORDER (waiter picks up a customer order)
+// Assigns the order's table to this waiter
+// ============================================================
+export async function assistWaiterOrder(orderId: string) {
+  const supabase = await createClient()
+  const profile = await getSessionProfile()
+
+  if (!profile) return { error: "Not authenticated" }
+  if (profile.role !== "waiter") return { error: "Not authorized" }
+
+  // Get the order to find the table_id
+  const { data: order, error: orderErr } = await supabase
+    .from("orders")
+    .select("id, table_id")
+    .eq("id", orderId)
+    .single()
+
+  if (orderErr) return { error: orderErr.message }
+
+  // Assign the table to this waiter
+  if (order.table_id) {
+    const { error: tableErr } = await supabase
+      .from("tables")
+      .update({ assigned_waiter: profile.id })
+      .eq("id", order.table_id)
+
+    if (tableErr) return { error: tableErr.message }
+  }
+
+  await supabase.rpc("log_activity", {
+    p_action: "order.assisted",
+    p_entity: "order",
+    p_entity_id: orderId,
+    p_detail: { waiter_id: profile.id, waiter_name: profile.full_name, action: "assisted_customer" },
+  })
+
+  revalidatePath("/waiter")
+  revalidatePath("/waiter/orders")
+  return { success: true }
+}
+
+// ============================================================
+// CONFIRM ORDER TO KITCHEN
+// After assist + customer review, finalize the order
+// ============================================================
+export async function confirmWaiterOrder(orderId: string) {
+  const supabase = await createClient()
+  const profile = await getSessionProfile()
+
+  if (!profile) return { error: "Not authenticated" }
+  if (profile.role !== "waiter") return { error: "Not authorized" }
+
+  const { error } = await supabase
+    .from("orders")
+    .update({ status: "confirmed" as OrderStatus })
+    .eq("id", orderId)
+
+  if (error) return { error: error.message }
+
+  // Mark table as occupied
+  const { data: order } = await supabase
+    .from("orders")
+    .select("table_id")
+    .eq("id", orderId)
+    .single()
+
+  if (order?.table_id) {
+    await supabase
+      .from("tables")
+      .update({ status: "occupied", assigned_waiter: profile.id })
+      .eq("id", order.table_id)
+  }
+
+  await supabase.rpc("log_activity", {
+    p_action: "order.confirmed",
+    p_entity: "order",
+    p_entity_id: orderId,
+    p_detail: { waiter_id: profile.id, waiter_name: profile.full_name, action: "confirmed_to_kitchen" },
+  })
+
+  revalidatePath("/waiter")
+  revalidatePath("/waiter/orders")
+  return { success: true }
+}
+
+// ============================================================
+// RELEASE ORDER (waiter releases a claimed order back to pool)
+// ============================================================
+export async function releaseWaiterOrder(orderId: string) {
+  const supabase = await createClient()
+  const profile = await getSessionProfile()
+
+  if (!profile) return { error: "Not authenticated" }
+  if (profile.role !== "waiter") return { error: "Not authorized" }
+
+  const { data: order } = await supabase
+    .from("orders")
+    .select("table_id")
+    .eq("id", orderId)
+    .single()
+
+  if (order?.table_id) {
+    await supabase
+      .from("tables")
+      .update({ assigned_waiter: null })
+      .eq("id", order.table_id)
+  }
+
+  await supabase.rpc("log_activity", {
+    p_action: "order.released",
+    p_entity: "order",
+    p_entity_id: orderId,
+    p_detail: { waiter_id: profile.id, waiter_name: profile.full_name },
+  })
+
+  revalidatePath("/waiter")
+  revalidatePath("/waiter/orders")
+  return { success: true }
+}
+
+// ============================================================
 // GET WAITER ORDERS (for orders page)
 // ============================================================
 export async function getWaiterOrders(status?: OrderStatus) {
@@ -67,13 +188,11 @@ export async function getWaiterOrders(status?: OrderStatus) {
   const { data, error } = await query
   if (error) return { error: error.message }
 
-  // Filter to only orders relevant to this waiter (assigned to them or unassigned)
+  // Show ALL non-cancelled, non-completed orders to ALL waiters
+  // Each waiter can assist / claim any order
   const filtered = (data ?? []).filter((o) => {
-    // Show all non-cancelled, non-completed orders that are waiting to be served
     if (o.status === "cancelled" || o.status === "completed") return false
-    // Show orders from tables assigned to this waiter OR tables with no assignment
-    const tableAssigned = o.tables?.assigned_waiter
-    return !tableAssigned || tableAssigned === profile.id
+    return true
   })
 
   return { orders: filtered }

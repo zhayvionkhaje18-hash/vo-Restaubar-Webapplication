@@ -28,10 +28,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { AssistModal, type WaiterOrderForModal } from "@/components/dashboard/assist-modal"
 import { formatCurrency, formatTime, formatDateTime } from "@/lib/constants"
 import { createClient } from "@/lib/supabase/client"
 import type { Profile, OrderWithItems, OrderStatus } from "@/lib/types"
-import { updateWaiterOrderStatus } from "@/app/actions/waiter"
+import {
+  updateWaiterOrderStatus,
+  assistWaiterOrder,
+  confirmWaiterOrder,
+} from "@/app/actions/waiter"
+import { toast } from "sonner"
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/waiter", label: "My Tables", icon: "LayoutDashboard" },
@@ -84,6 +90,9 @@ export function WaiterOrdersClient({
   const [tab, setTab] = useState<OrderStatus | "all">("all")
   const [selectedOrder, setSelectedOrder] = useState<WaiterOrder | null>(null)
   const [pending, setPending] = useState<string | null>(null)
+  const [assisting, setAssisting] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState<string | null>(null)
+  const [assistModalOrder, setAssistModalOrder] = useState<WaiterOrderForModal | null>(null)
 
   // Real-time subscription for orders
   useEffect(() => {
@@ -135,6 +144,50 @@ export function WaiterOrdersClient({
     },
     [selectedOrder]
   )
+
+  const handleAssist = useCallback(async (order: WaiterOrder) => {
+    setAssisting(order.id)
+    try {
+      const result = await assistWaiterOrder(order.id)
+      if (result?.error) {
+        alert(result.error)
+        return
+      }
+      // Refresh orders to get updated table assignment
+      const { data } = await supabase
+        .from("orders")
+        .select("*, tables(label, zone, assigned_waiter), order_items(*)")
+        .eq("id", order.id)
+        .single()
+      if (data) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === order.id ? { ...o, ...data } : o))
+        )
+        // Open the POS assist modal
+        setAssistModalOrder(data as WaiterOrderForModal)
+      }
+    } finally {
+      setAssisting(null)
+    }
+  }, [supabase])
+
+  const handleConfirm = useCallback(async (order: WaiterOrder) => {
+    setConfirming(order.id)
+    try {
+      const result = await confirmWaiterOrder(order.id)
+      if (result?.error) {
+        alert(result.error)
+        return
+      }
+      setOrders((prev) =>
+        prev.map((o) => (o.id === order.id ? { ...o, status: "confirmed" } : o))
+      )
+      setSelectedOrder((prev) => (prev ? { ...prev, status: "confirmed" } : null))
+      toast.success("Order confirmed! Sent to kitchen.")
+    } finally {
+      setConfirming(null)
+    }
+  }, [])
 
   const filtered = orders.filter((o) => {
     if (o.status === "cancelled" || o.status === "completed") return false
@@ -210,9 +263,19 @@ export function WaiterOrdersClient({
                 <WaiterOrderCard
                   key={order.id}
                   order={order}
-                  onView={() => setSelectedOrder(order)}
+                  onView={() => {
+                    const claimedByMe = order.tables?.assigned_waiter === profile.id
+                    if (order.status === "pending" && claimedByMe) {
+                      // Open POS assist modal
+                      setAssistModalOrder(order as unknown as WaiterOrderForModal)
+                    } else {
+                      setSelectedOrder(order)
+                    }
+                  }}
                   onStatusUpdate={(s) => handleStatusUpdate(order, s)}
+                  onAssist={() => handleAssist(order)}
                   pending={pending === order.id}
+                  assisting={assisting === order.id}
                 />
               ))}
             </div>
@@ -220,9 +283,31 @@ export function WaiterOrdersClient({
         </TabsContent>
       </Tabs>
 
-      {/* Order Detail Dialog */}
+      {/* POS Assist Modal (for pending orders claimed by this waiter) */}
+      {assistModalOrder && (
+        <AssistModal
+          open={true}
+          onClose={() => setAssistModalOrder(null)}
+          order={assistModalOrder}
+          profile={profile}
+          onConfirmed={(orderId) => {
+            setOrders((prev) =>
+              prev.map((o) => (o.id === orderId ? { ...o, status: "confirmed" as OrderStatus } : o))
+            )
+            setAssistModalOrder(null)
+          }}
+          onOrderUpdated={(updated) => {
+            setOrders((prev) =>
+              prev.map((o) => (o.id === updated.id ? { ...o, ...updated } : o))
+            )
+            setAssistModalOrder(updated)
+          }}
+        />
+      )}
+
+      {/* Order Detail Dialog (for non-pending or non-claimed orders) */}
       <Dialog
-        open={!!selectedOrder}
+        open={!!selectedOrder && !assistModalOrder}
         onOpenChange={(o) => !o && setSelectedOrder(null)}
       >
         <DialogContent className="max-w-md">
@@ -323,15 +408,21 @@ function WaiterOrderCard({
   order,
   onView,
   onStatusUpdate,
+  onAssist,
   pending,
+  assisting,
 }: {
   order: WaiterOrder
   onView: () => void
   onStatusUpdate: (s: OrderStatus) => void
+  onAssist: () => void
   pending: boolean
+  assisting: boolean
 }) {
   const next = NEXT_STATUS[order.status as OrderStatus]
   const config = STATUS_CONFIG[order.status as OrderStatus]
+  const isPending = order.status === "pending"
+  const isClaimedByMe = order.tables?.assigned_waiter === profile.id
 
   return (
     <Card>
@@ -358,6 +449,12 @@ function WaiterOrderCard({
         <p className="text-xs text-muted-foreground flex items-center gap-1">
           <Clock className="size-3" />
           {formatTime(new Date(order.created_at))}
+          {isPending && !isClaimedByMe && (
+            <span className="ml-2 text-amber-600 font-medium">Needs assistance</span>
+          )}
+          {isClaimedByMe && (
+            <span className="ml-2 text-blue-600 font-medium">My table</span>
+          )}
         </p>
       </CardHeader>
 
@@ -383,26 +480,54 @@ function WaiterOrderCard({
 
         {/* Actions */}
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={onView} className="flex-1">
-            <Eye className="size-3.5" />
-            <span className="ml-1.5">View</span>
-          </Button>
-          {next && (
-            <Button
-              size="sm"
-              onClick={() => onStatusUpdate(next)}
-              disabled={pending}
-              className="flex-1"
-            >
-              {pending ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                STATUS_ACTION[order.status as OrderStatus]?.icon
+          {/* Pending orders: Assist or View (if already claimed) */}
+          {isPending ? (
+            isClaimedByMe ? (
+              <>
+                <Button size="sm" variant="outline" onClick={onView} className="flex-1">
+                  <Eye className="size-3.5" />
+                  <span className="ml-1.5">View & Confirm</span>
+                </Button>
+              </>
+            ) : (
+              <Button
+                size="sm"
+                onClick={onAssist}
+                disabled={assisting}
+                className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
+              >
+                {assisting ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <AlertCircle className="size-3.5" />
+                )}
+                <span className="ml-1.5">{assisting ? "Assisting..." : "Assist"}</span>
+              </Button>
+            )
+          ) : (
+            <>
+              <Button size="sm" variant="outline" onClick={onView} className="flex-1">
+                <Eye className="size-3.5" />
+                <span className="ml-1.5">View</span>
+              </Button>
+              {next && (
+                <Button
+                  size="sm"
+                  onClick={() => onStatusUpdate(next)}
+                  disabled={pending}
+                  className="flex-1"
+                >
+                  {pending ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    STATUS_ACTION[order.status as OrderStatus]?.icon
+                  )}
+                  <span className="ml-1.5">
+                    {pending ? "Updating..." : STATUS_ACTION[order.status as OrderStatus]?.label}
+                  </span>
+                </Button>
               )}
-              <span className="ml-1.5">
-                {pending ? "Updating..." : STATUS_ACTION[order.status as OrderStatus]?.label}
-              </span>
-            </Button>
+            </>
           )}
         </div>
       </CardContent>
