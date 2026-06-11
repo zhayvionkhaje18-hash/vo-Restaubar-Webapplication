@@ -112,7 +112,7 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string }> = {
 
 // ─── Menu Browser Modal (fully responsive) ───────────────────────────────────
 
-function MenuBrowserModal({
+export function MenuBrowserModal({
   open,
   onClose,
   orderId,
