@@ -292,117 +292,195 @@ export function PosOrdersClient({
         open={!!selectedOrder && !payDialog.open}
         onOpenChange={(o) => !o && setSelectedOrder(null)}
       >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              Order #{selectedOrder?.order_number}
-              {selectedOrder?.tables && ` — ${selectedOrder.tables.label}`}
-            </DialogTitle>
-          </DialogHeader>
+        <DialogContent className="w-full sm:max-w-lg md:max-w-xl p-0 gap-0 overflow-hidden flex flex-col max-h-[90vh]">
           {selectedOrder && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Badge className={STATUS_CONFIG[selectedOrder?.status as OrderStatus]?.color ?? "bg-gray-100"}>
-                  {STATUS_CONFIG[selectedOrder?.status as OrderStatus]?.label ?? selectedOrder?.status}
-                </Badge>
-                {selectedOrder.customer_name && (
-                  <span className="text-sm text-muted-foreground">
-                    {selectedOrder.customer_name}
-                  </span>
-                )}
-              </div>
-
-              {/* Items */}
-              <div className="space-y-2 rounded-lg bg-muted/30 p-3">
-                {selectedOrder.order_items?.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between text-sm">
-                    <div>
-                      <span className="font-medium">{item.quantity}x</span> {item.name}
-                      {item.notes && (
-                        <span className="ml-1 text-xs text-muted-foreground">({item.notes})</span>
-                      )}
+            <>
+              {/* Header band */}
+              <div className="px-6 py-4 border-b bg-muted/30 shrink-0">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-lg sm:text-xl font-bold">
+                        Order #{selectedOrder.order_number}
+                      </h2>
+                      <Badge
+                        className={
+                          STATUS_CONFIG[selectedOrder?.status as OrderStatus]?.color ?? "bg-gray-100"
+                        }
+                      >
+                        {STATUS_CONFIG[selectedOrder?.status as OrderStatus]?.label ??
+                          selectedOrder?.status}
+                      </Badge>
                     </div>
-                    <span className="text-muted-foreground">
-                      {formatCurrency(Number(item.unit_price) * item.quantity)}
-                    </span>
+                    <div className="flex items-center gap-3 mt-1 text-xs sm:text-sm text-muted-foreground flex-wrap">
+                      {selectedOrder.tables?.label && (
+                        <span className="font-medium text-foreground">
+                          {selectedOrder.tables.label}
+                          {selectedOrder.tables.zone ? ` (${selectedOrder.tables.zone})` : ""}
+                        </span>
+                      )}
+                      {selectedOrder.customer_name && (
+                        <span>· {selectedOrder.customer_name}</span>
+                      )}
+                      <span>· {formatDateTime(selectedOrder.created_at)}</span>
+                    </div>
                   </div>
-                ))}
-              </div>
-
-              {/* Totals */}
-              <div className="border-t pt-3 space-y-1.5 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>{formatCurrency(Number(selectedOrder.subtotal))}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax</span>
-                  <span>{formatCurrency(Number(selectedOrder.tax))}</span>
-                </div>
-                <div className="flex justify-between font-semibold text-base pt-1">
-                  <span>Total</span>
-                  <span className="text-primary">{formatCurrency(Number(selectedOrder.total))}</span>
+                  {selectedOrder.payment_status === "paid" && (
+                    <Badge variant="outline" className="shrink-0">
+                      <CreditCard className="size-3 mr-1" /> Paid
+                    </Badge>
+                  )}
                 </div>
               </div>
 
-              <p className="text-xs text-muted-foreground">
-                {formatDateTime(selectedOrder.created_at)}
-              </p>
-            </div>
-          )}
-          <DialogFooter className="gap-2 sm:gap-0 flex-wrap">
-            <Button
-              onClick={() => setShowMenuModal(true)}
-              className="bg-emerald-600 hover:bg-emerald-700 order-1 sm:order-none"
-              disabled={!selectedOrder || selectedOrder.payment_status === "paid"}
-            >
-              <Plus className="size-3.5" />
-              <span className="ml-1.5">Add Items</span>
-            </Button>
-            <div className="flex gap-2 ml-auto">
-              <Button variant="outline" onClick={() => setSelectedOrder(null)}>
-                Close
-              </Button>
-              {selectedOrder && selectedOrder.payment_status !== "paid" && selectedOrder?.status && selectedOrder?.status !== "cancelled" && (
-                <>
-                  <Button
-                    variant="destructive"
-                    onClick={() => selectedOrder && handleCancel(selectedOrder)}
-                    disabled={pending}
-                  >
-                    <X className="size-3.5" />
-                    <span className="ml-1.5">Cancel</span>
-                  </Button>
-                  {selectedOrder?.status && NEXT_STATUS[selectedOrder.status as OrderStatus] && (
-                    <Button
-                      onClick={() =>
-                        selectedOrder &&
-                        handleStatusUpdate(
-                          selectedOrder,
-                          NEXT_STATUS[selectedOrder?.status as OrderStatus]!
-                        )
-                      }
-                      disabled={pending}
-                    >
-                      {STATUS_ACTION[selectedOrder?.status as OrderStatus]?.icon}
-                      <span className="ml-1.5">
-                        {STATUS_ACTION[selectedOrder?.status as OrderStatus]?.label}
+              {/* Scrollable body */}
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <div className="px-6 py-5 space-y-5">
+                  {/* Items list */}
+                  <section>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Order Items
+                      </h3>
+                      <span className="text-xs text-muted-foreground">
+                        {selectedOrder.order_items?.length ?? 0} item
+                        {(selectedOrder.order_items?.length ?? 0) !== 1 ? "s" : ""}
                       </span>
+                    </div>
+                    <div className="space-y-1.5 rounded-lg border bg-card overflow-hidden">
+                      {selectedOrder.order_items?.map((item, idx) => (
+                        <div
+                          key={item.id}
+                          className={`flex items-center gap-3 px-4 py-3 ${
+                            idx > 0 ? "border-t" : ""
+                          }`}
+                        >
+                          <div className="flex items-center justify-center size-7 rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
+                            {item.quantity}×
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium leading-tight truncate">
+                              {item.name}
+                            </p>
+                            {item.notes && (
+                              <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                                {item.notes}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {formatCurrency(Number(item.unit_price))} each
+                            </p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-sm font-semibold tabular-nums">
+                              {formatCurrency(Number(item.unit_price) * item.quantity)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  {/* Totals */}
+                  <section className="rounded-lg border bg-muted/20 p-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="tabular-nums font-medium">
+                        {formatCurrency(Number(selectedOrder.subtotal))}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Tax (12%)</span>
+                      <span className="tabular-nums font-medium">
+                        {formatCurrency(Number(selectedOrder.tax))}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-baseline border-t pt-2 mt-2">
+                      <span className="text-sm font-semibold">Total</span>
+                      <span className="text-xl font-bold text-primary tabular-nums">
+                        {formatCurrency(Number(selectedOrder.total))}
+                      </span>
+                    </div>
+                  </section>
+                </div>
+              </div>
+
+              {/* Footer actions — proper corporate layout */}
+              <div className="border-t px-6 py-4 shrink-0 bg-muted/10">
+                <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2">
+                  {/* Left side: secondary actions */}
+                  <div className="flex gap-2 flex-wrap">
+                    {selectedOrder.payment_status !== "paid" &&
+                      selectedOrder?.status !== "cancelled" && (
+                        <>
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowMenuModal(true)}
+                            disabled={pending}
+                            size="sm"
+                          >
+                            <Plus className="size-3.5" />
+                            <span className="ml-1.5">Add Items</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => handleCancel(selectedOrder)}
+                            disabled={pending}
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <X className="size-3.5" />
+                            <span className="ml-1.5">Cancel Order</span>
+                          </Button>
+                        </>
+                      )}
+                  </div>
+
+                  {/* Right side: primary action + close */}
+                  <div className="flex gap-2 sm:ml-auto">
+                    <Button variant="ghost" onClick={() => setSelectedOrder(null)} size="sm">
+                      Close
                     </Button>
-                  )}
-                  {selectedOrder?.status === "served" && (
-                    <Button
-                      onClick={() => selectedOrder && openPayDialog(selectedOrder)}
-                      disabled={pending}
-                    >
-                      <CreditCard className="size-3.5" />
-                      <span className="ml-1.5">Pay</span>
-                    </Button>
-                  )}
-                </>
-              )}
-            </div>
-          </DialogFooter>
+                    {selectedOrder.payment_status !== "paid" &&
+                      selectedOrder?.status !== "cancelled" && (
+                        <>
+                          {selectedOrder?.status &&
+                            NEXT_STATUS[selectedOrder.status as OrderStatus] &&
+                            selectedOrder.status !== "served" && (
+                              <Button
+                                onClick={() =>
+                                  handleStatusUpdate(
+                                    selectedOrder,
+                                    NEXT_STATUS[selectedOrder.status as OrderStatus]!
+                                  )
+                                }
+                                disabled={pending}
+                                size="sm"
+                              >
+                                {STATUS_ACTION[selectedOrder.status as OrderStatus]?.icon}
+                                <span className="ml-1.5">
+                                  {STATUS_ACTION[selectedOrder.status as OrderStatus]?.label}
+                                </span>
+                              </Button>
+                            )}
+                          {selectedOrder?.status === "served" && (
+                            <Button
+                              onClick={() => openPayDialog(selectedOrder)}
+                              disabled={pending}
+                              size="sm"
+                              className="bg-emerald-600 hover:bg-emerald-700"
+                            >
+                              <CreditCard className="size-3.5" />
+                              <span className="ml-1.5">Process Payment</span>
+                            </Button>
+                          )}
+                        </>
+                      )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
