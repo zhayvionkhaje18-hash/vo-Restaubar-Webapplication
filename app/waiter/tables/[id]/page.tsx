@@ -13,12 +13,8 @@ export default async function WaiterTableDetailPage({
   const { id } = await params
   const profile = await getSessionProfile()
 
-  if (!profile) {
-    redirect("/login")
-  }
-  if (profile.role !== "waiter") {
-    redirect("/")
-  }
+  if (!profile) redirect("/login")
+  if (profile.role !== "waiter") redirect("/")
 
   const [tableResult, menuData] = await Promise.all([
     getWaiterTableDetail(id),
@@ -29,7 +25,7 @@ export default async function WaiterTableDetailPage({
 
   return (
     <WaiterTableDetailClient
-      profile={profile}
+      profile={profile!}
       table={tableResult.table}
       initialOrders={tableResult.orders}
       categories={menuData.categories}

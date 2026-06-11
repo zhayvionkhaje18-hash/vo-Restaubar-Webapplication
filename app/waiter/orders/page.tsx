@@ -8,14 +8,11 @@ export const dynamic = "force-dynamic"
 export default async function WaiterOrdersPage() {
   const profile = await getSessionProfile()
 
-  if (!profile) {
-    redirect("/login")
-  }
-  if (profile.role !== "waiter") {
-    redirect("/")
-  }
+  if (!profile) redirect("/login")
+  if (profile.role !== "waiter") redirect("/")
 
   const { orders } = await getWaiterOrders()
 
-  return <WaiterOrdersClient profile={profile} initialOrders={orders ?? []} />
+  // TypeScript doesn't narrow after redirect() — use non-null assertion
+  return <WaiterOrdersClient profile={profile!} initialOrders={orders ?? []} />
 }

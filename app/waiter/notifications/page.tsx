@@ -8,18 +8,14 @@ export const dynamic = "force-dynamic"
 export default async function WaiterNotificationsPage() {
   const profile = await getSessionProfile()
 
-  if (!profile) {
-    redirect("/login")
-  }
-  if (profile.role !== "waiter") {
-    redirect("/")
-  }
+  if (!profile) redirect("/login")
+  if (profile.role !== "waiter") redirect("/")
 
   const result = await getWaiterNotifications()
 
   return (
     <WaiterNotificationsClient
-      profile={profile}
+      profile={profile!}
       notifications={result.notifications ?? []}
       pendingOrders={result.pendingOrders ?? []}
     />

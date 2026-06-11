@@ -7,12 +7,8 @@ export const dynamic = "force-dynamic"
 export default async function WaiterPage() {
   const profile = await getSessionProfile()
 
-  if (!profile) {
-    redirect("/login")
-  }
-  if (profile.role !== "waiter") {
-    redirect("/")
-  }
+  if (!profile) redirect("/login")
+  if (profile.role !== "waiter") redirect("/")
 
-  return <WaiterDashboard profile={profile} />
+  return <WaiterDashboard profile={profile!} />
 }
