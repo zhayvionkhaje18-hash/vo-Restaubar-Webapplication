@@ -6,7 +6,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Allow menu image uploads up to 6MB through server actions
+  // Transpile sonner so Next.js processes its React JSX imports correctly (fixes jsx-dev-runtime module factory error)
+  transpilePackages: ["sonner"],
   experimental: {
     serverActions: {
       bodySizeLimit: "6mb",
