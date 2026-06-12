@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 import {
   Dialog,
   DialogContent,
@@ -249,19 +249,58 @@ export function PosOrdersClient({
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as OrderStatus | "all")}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">
-            All ({orders.length})
-          </TabsTrigger>
-          {(["pending", "confirmed", "preparing", "ready", "served", "completed"] as OrderStatus[]).map(
-            (s) =>
-              counts[s] ? (
-                <TabsTrigger key={s} value={s}>
-                  {STATUS_CONFIG[s].label} ({counts[s]})
-                </TabsTrigger>
-              ) : null
-          )}
-        </TabsList>
+        {/* Status summary cards — click to filter */}
+        <div className="mb-4 grid gap-2 sm:grid-cols-3 lg:grid-cols-7">
+          {(
+            [
+              "pending",
+              "confirmed",
+              "preparing",
+              "ready",
+              "served",
+              "completed",
+              "cancelled",
+            ] as OrderStatus[]
+          ).map((status) => {
+            const s = STATUS_CONFIG[status]
+            const active = tab === status
+            return (
+              <button
+                key={status}
+                onClick={() => setTab(active ? "all" : status)}
+                className={`flex items-center justify-between rounded-lg border px-3 py-2.5 text-left text-sm transition-colors ${
+                  active
+                    ? "border-primary bg-primary/5"
+                    : "hover:bg-muted/40"
+                }`}
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <span
+                    className={`size-1.5 rounded-full shrink-0 ${
+                      status === "pending"
+                        ? "bg-amber-500"
+                        : status === "confirmed"
+                        ? "bg-cyan-500"
+                        : status === "preparing"
+                        ? "bg-blue-500"
+                        : status === "ready"
+                        ? "bg-emerald-500"
+                        : status === "served"
+                        ? "bg-purple-500"
+                        : status === "completed"
+                        ? "bg-zinc-500"
+                        : "bg-rose-500"
+                    }`}
+                  />
+                  <span className="font-medium truncate">{s.label}</span>
+                </span>
+                <span className="font-semibold tabular-nums text-muted-foreground shrink-0 ml-2">
+                  {counts[status] ?? 0}
+                </span>
+              </button>
+            )
+          })}
+        </div>
 
         <TabsContent value={tab}>
           {filtered.length === 0 ? (
