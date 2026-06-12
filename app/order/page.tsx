@@ -301,42 +301,41 @@ function MenuItemCard({
   onAdd: (item: MenuItem) => void
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-xl border bg-card transition-all hover:shadow-md hover:border-primary/20">
+    <div className="group relative overflow-hidden rounded-xl border bg-card transition-all hover:shadow-md hover:border-primary/30 flex flex-col">
       {item.image_url && (
         <div className="aspect-video w-full overflow-hidden bg-muted">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={item.image_url}
             alt={item.name}
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
       )}
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold leading-tight">{item.name}</h3>
-            {item.description && (
-              <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
-                {item.description}
-              </p>
-            )}
-          </div>
-          <div className="shrink-0 text-right">
-            <p className="text-lg font-bold text-primary">
-              ₱{item.price.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-            </p>
-          </div>
+      <CardContent className="p-4 sm:p-5 flex-1 flex flex-col">
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <h3 className="font-semibold text-base leading-tight flex-1 min-w-0">
+            {item.name}
+          </h3>
+          <p className="text-lg font-bold text-primary whitespace-nowrap tabular-nums shrink-0">
+            ₱{item.price.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+          </p>
         </div>
-        <Button
-          size="sm"
-          className="mt-3 w-full"
-          onClick={() => onAdd(item)}
-          disabled={!item.is_available}
-        >
-          <Plus className="mr-1 size-4" />
-          {item.is_available ? "Add to Order" : "Unavailable"}
-        </Button>
+        {item.description && (
+          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-4">
+            {item.description}
+          </p>
+        )}
+        <div className="mt-auto pt-2">
+          <Button
+            className="w-full h-10 font-medium"
+            onClick={() => onAdd(item)}
+            disabled={!item.is_available}
+          >
+            <Plus className="mr-1.5 size-4" />
+            {item.is_available ? "Add to Order" : "Unavailable"}
+          </Button>
+        </div>
       </CardContent>
     </div>
   )
@@ -359,28 +358,52 @@ function CartItemRow({
   onRemove: () => void
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border bg-card p-3">
-      <div className="flex-1 min-w-0">
-        <p className="font-medium leading-tight">{item.name}</p>
-        <p className="text-sm text-primary font-semibold">
-          ₱{item.price.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+    <div className="rounded-lg border bg-card p-3 sm:p-4">
+      <div className="flex items-start gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm leading-tight">{item.name}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
+            ₱{item.price.toLocaleString("en-PH", { minimumFractionDigits: 2 })} each
+          </p>
+        </div>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="size-7 -mt-1 -mr-1 text-muted-foreground hover:text-destructive"
+          onClick={onRemove}
+          aria-label="Remove item"
+        >
+          <X className="size-4" />
+        </Button>
+      </div>
+      <div className="flex items-center justify-between mt-3 pt-3 border-t">
+        <div className="flex items-center gap-1">
+          <Button
+            size="icon"
+            variant="outline"
+            className="size-8"
+            onClick={onDecrease}
+            aria-label="Decrease quantity"
+          >
+            <Minus className="size-3.5" />
+          </Button>
+          <span className="w-9 text-center font-semibold text-sm tabular-nums">
+            {quantity}
+          </span>
+          <Button
+            size="icon"
+            variant="outline"
+            className="size-8"
+            onClick={onIncrease}
+            aria-label="Increase quantity"
+          >
+            <Plus className="size-3.5" />
+          </Button>
+        </div>
+        <p className="font-bold text-base tabular-nums">
+          ₱{(item.price * quantity).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
         </p>
       </div>
-      <div className="flex items-center gap-1">
-        <Button size="icon" variant="outline" className="size-8" onClick={onDecrease}>
-          <Minus className="size-3" />
-        </Button>
-        <span className="w-8 text-center font-semibold">{quantity}</span>
-        <Button size="icon" variant="outline" className="size-8" onClick={onIncrease}>
-          <Plus className="size-3" />
-        </Button>
-      </div>
-      <p className="w-20 text-right font-semibold">
-        ₱{(item.price * quantity).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-      </p>
-      <Button size="icon" variant="ghost" className="size-8 text-destructive" onClick={onRemove}>
-        <X className="size-4" />
-      </Button>
     </div>
   )
 }
@@ -395,6 +418,7 @@ function CartDrawer({
   cartTotal,
   onSubmit,
   customerName,
+  submitting,
 }: {
   isOpen: boolean
   onClose: () => void
@@ -402,81 +426,121 @@ function CartDrawer({
   cartTotal: number
   onSubmit: () => void
   customerName: string
+  submitting: boolean
 }) {
+  // Tax and total calculated
+  const TAX_RATE = 0.12
+  const tax = Math.round(cartTotal * TAX_RATE * 100) / 100
+  const grandTotal = Math.round((cartTotal + tax) * 100) / 100
+  const itemCount = cartItems.reduce((sum, c) => sum + c.quantity, 0)
+
   return (
     <>
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm animate-in fade-in"
           onClick={onClose}
         />
       )}
 
       {/* Drawer */}
       <div
-        className={`fixed bottom-0 right-0 top-0 z-50 w-full max-w-md bg-background shadow-2xl transition-transform duration-300 ${
+        className={`fixed bottom-0 right-0 top-0 z-50 w-full sm:max-w-md bg-background shadow-2xl transition-transform duration-300 flex flex-col ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex h-full flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b px-4 py-4">
-            <div>
-              <h2 className="text-lg font-bold">Your Order</h2>
-              <p className="text-sm text-muted-foreground">{customerName}</p>
+        {/* Header band */}
+        <div className="flex items-center justify-between border-b bg-muted/30 px-5 sm:px-6 py-4 shrink-0">
+          <div>
+            <h2 className="text-lg font-bold">Your Order</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {itemCount > 0
+                ? `${itemCount} item${itemCount !== 1 ? "s" : ""} · ${customerName}`
+                : customerName}
+            </p>
+          </div>
+          <Button size="icon" variant="ghost" onClick={onClose} aria-label="Close cart">
+            <X className="size-5" />
+          </Button>
+        </div>
+
+        {/* Items */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 sm:px-6 py-4">
+          {cartItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center px-4">
+              <div className="size-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                <ShoppingCart className="size-8 text-muted-foreground/50" />
+              </div>
+              <p className="font-semibold text-foreground">Your cart is empty</p>
+              <p className="mt-1 text-sm text-muted-foreground max-w-xs">
+                Browse the menu and tap "Add to Order" on items you'd like to enjoy
+              </p>
             </div>
-            <Button size="icon" variant="ghost" onClick={onClose}>
-              <X className="size-5" />
-            </Button>
-          </div>
-
-          {/* Items */}
-          <div className="flex-1 overflow-auto p-4">
-            {cartItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <ShoppingCart className="mb-3 size-12 text-muted-foreground/50" />
-                <p className="font-medium text-muted-foreground">Your cart is empty</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Add items from the menu to get started
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {cartItems.map(({ item, quantity }) => (
-                  <CartItemRow
-                    key={item.id}
-                    item={item}
-                    quantity={quantity}
-                    onIncrease={() => {}}
-                    onDecrease={() => {}}
-                    onRemove={() => {}}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          {cartItems.length > 0 && (
-            <div className="border-t p-4 space-y-4">
-              <div className="flex items-center justify-between text-lg font-bold">
-                <span>Total</span>
-                <span className="text-primary">
-                  ₱{cartTotal.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              <Button
-                size="lg"
-                className="w-full"
-                onClick={onSubmit}
-              >
-                <Check className="mr-2 size-5" />
-                Submit Order
-              </Button>
+          ) : (
+            <div className="space-y-2.5">
+              {cartItems.map(({ item, quantity }) => (
+                <CartItemRow
+                  key={item.id}
+                  item={item}
+                  quantity={quantity}
+                  onIncrease={() => onIncrease(item.id)}
+                  onDecrease={() => onDecrease(item.id)}
+                  onRemove={() => onRemove(item.id)}
+                />
+              ))}
             </div>
           )}
         </div>
+
+        {/* Footer with totals + submit */}
+        {cartItems.length > 0 && (
+          <div className="border-t bg-muted/10 px-5 sm:px-6 py-4 space-y-4 shrink-0">
+            {/* Totals breakdown */}
+            <div className="rounded-lg border bg-card p-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="tabular-nums font-medium">
+                  ₱{cartTotal.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Tax (12%)</span>
+                <span className="tabular-nums font-medium">
+                  ₱{tax.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="flex justify-between items-baseline border-t pt-2 mt-1">
+                <span className="text-sm font-semibold">Total</span>
+                <span className="text-xl font-bold text-primary tabular-nums">
+                  ₱{grandTotal.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+
+            <Button
+              size="lg"
+              className="w-full h-12 text-base font-semibold"
+              onClick={onSubmit}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <>
+                  <span className="size-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Check className="mr-2 size-5" />
+                  Submit Order
+                </>
+              )}
+            </Button>
+            <p className="text-xs text-center text-muted-foreground">
+              Your order will be sent directly to the kitchen
+            </p>
+          </div>
+        )}
       </div>
     </>
   )
@@ -620,6 +684,9 @@ function CustomerOrderContent() {
 
     setSubmitting(true)
 
+    const tax = Math.round(cartTotal * 0.12 * 100) / 100
+    const total = Math.round((cartTotal + tax) * 100) / 100
+
     // Create order
     const { data: orderData, error: orderError } = await supabase
       .from("orders")
@@ -630,8 +697,8 @@ function CustomerOrderContent() {
         status: "pending",
         payment_status: "unpaid",
         subtotal: cartTotal,
-        tax: 0,
-        total: cartTotal,
+        tax,
+        total,
         notes: null,
       })
       .select()
@@ -662,9 +729,8 @@ function CustomerOrderContent() {
     }
 
     setOrderNumber(orderData.order_number)
-    setOrderTotal(cartTotal)
+    setOrderTotal(total)
     setOrderItems([...cart])
-    setOrderPlaced(true)
     setCart([])
     setShowCart(false)
     setSubmitting(false)
@@ -689,15 +755,112 @@ function CustomerOrderContent() {
 
   // Loading
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground">Loading menu...</p>
+  return (
+    <Card className="border-0 shadow-2xl shadow-black/40">
+      <CardContent className="p-6 sm:p-8 text-center">
+        {/* Restaurant Logo/Icon */}
+        <div className="mx-auto mb-5 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg">
+          <UtensilsCrossed className="size-8 sm:size-10 text-white" />
         </div>
-      </div>
-    )
-  }
+
+        {/* Welcome Text */}
+        <h1 className="mb-1.5 text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+          Welcome to
+        </h1>
+        <p className="mb-1 text-2xl sm:text-3xl font-extrabold tracking-tight text-primary">
+          {RESTAURANT_NAME}
+        </p>
+        <p className="mb-6 text-sm text-muted-foreground">
+          Fine dining, delivered to your table
+        </p>
+
+        {/* Table Info */}
+        {table && (
+          <div className="mb-6 rounded-xl border bg-muted/40 px-4 py-3.5">
+            <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+              Your Table
+            </p>
+            <p className="text-2xl sm:text-3xl font-black text-primary mt-0.5">
+              {table.label}
+            </p>
+            {table.zone && (
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                {table.zone}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Code + Name Input */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Table Code Input */}
+          <div className="text-left space-y-1.5">
+            <Label htmlFor="tableCode" className="text-sm font-semibold">
+              Table Code <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="tableCode"
+              placeholder="Enter 4-digit code"
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value.replace(/\D/g, '').slice(0, 4))
+                setCodeError("")
+              }}
+              className="h-12 text-center text-xl sm:text-2xl font-black tracking-[0.4em]"
+              maxLength={4}
+              required
+            />
+            {codeError && (
+              <p className="text-xs text-destructive font-medium">{codeError}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Find the code on your table&apos;s QR card
+            </p>
+          </div>
+
+          {/* Name Input */}
+          <div className="text-left space-y-1.5">
+            <Label htmlFor="customerName" className="text-sm font-semibold">
+              Your Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="customerName"
+              placeholder="Enter your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="h-12 text-base"
+              autoComplete="name"
+              required
+            />
+          </div>
+
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full h-12 text-base font-semibold mt-2"
+            disabled={!name.trim() || code.length !== 4 || loading}
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                Please wait...
+              </span>
+            ) : (
+              <>
+                <UtensilsCrossed className="mr-2 size-5" />
+                View Menu & Order
+              </>
+            )}
+          </Button>
+        </form>
+
+        <p className="mt-5 text-xs text-muted-foreground">
+          Your order will be sent directly to our kitchen
+        </p>
+      </CardContent>
+    </Card>
+  )
+}
 
   // Table not found
   if (!table) {
@@ -720,38 +883,50 @@ function CustomerOrderContent() {
   if (orderPlaced) {
     return (
       <div className="min-h-screen bg-background">
-        {/* Header */}
-        <header className="border-b bg-primary text-primary-foreground">
-          <div className="mx-auto max-w-2xl px-4 py-6 text-center">
-            <Check className="mx-auto mb-3 size-12" />
-            <h1 className="text-2xl font-bold">Order Placed!</h1>
-            <p className="mt-1 text-primary-foreground/80">
+        {/* Header band */}
+        <header className="border-b bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
+          <div className="mx-auto max-w-2xl px-4 py-8 sm:py-10 text-center">
+            <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm">
+              <Check className="size-9" strokeWidth={2.5} />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Order Placed!</h1>
+            <p className="mt-2 text-sm sm:text-base text-primary-foreground/90">
               Your order has been sent to our kitchen
             </p>
           </div>
         </header>
 
-        <main className="mx-auto max-w-2xl px-4 py-8 space-y-6">
+        <main className="mx-auto max-w-2xl px-4 py-6 sm:py-8 space-y-5 sm:space-y-6">
           {/* Order Details Card */}
           <Card className="overflow-hidden">
-            <div className="bg-primary p-4 text-primary-foreground">
-              <p className="text-xs uppercase tracking-wider opacity-80">Order Number</p>
-              <p className="text-3xl font-black">#{orderNumber}</p>
+            <div className="bg-muted/40 border-b px-5 sm:px-6 py-4">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Order Number
+              </p>
+              <p className="text-3xl sm:text-4xl font-black text-primary mt-0.5 tabular-nums">
+                #{orderNumber}
+              </p>
             </div>
-            <CardContent className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
+            <CardContent className="p-5 sm:p-6 space-y-5">
+              <div className="grid grid-cols-2 gap-4 sm:gap-6">
                 <div>
-                  <p className="text-muted-foreground">Table</p>
-                  <p className="font-bold text-xl">{table.label}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                    Table
+                  </p>
+                  <p className="font-bold text-xl sm:text-2xl">{table.label}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Name</p>
-                  <p className="font-bold">{customerName}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                    Name
+                  </p>
+                  <p className="font-bold text-lg sm:text-xl truncate">{customerName}</p>
                 </div>
               </div>
-              <div className="border-t pt-4">
-                <p className="text-muted-foreground text-sm">Total Amount</p>
-                <p className="text-3xl font-black text-primary">
+              <div className="border-t pt-5">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                  Total Amount
+                </p>
+                <p className="text-3xl sm:text-4xl font-black text-primary tabular-nums">
                   ₱{orderTotal.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
                 </p>
               </div>
@@ -764,13 +939,40 @@ function CustomerOrderContent() {
           {/* Order Items */}
           {orderItems.length > 0 && (
             <Card>
-              <CardContent className="p-4">
-                <h3 className="font-semibold mb-3">Your Order Items</h3>
-                <div className="space-y-2">
-                  {orderItems.map(({ item, quantity }) => (
-                    <div key={item.id} className="flex items-center justify-between text-sm">
-                      <span>{quantity}x {item.name}</span>
-                      <span className="font-medium">₱{(item.price * quantity).toLocaleString("en-PH", { minimumFractionDigits: 2 })}</span>
+              <CardContent className="p-5 sm:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-base">Your Order Items</h3>
+                  <span className="text-xs text-muted-foreground">
+                    {orderItems.length} item{orderItems.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                <div className="space-y-1 rounded-lg border overflow-hidden">
+                  {orderItems.map(({ item, quantity }, idx) => (
+                    <div
+                      key={item.id}
+                      className={`flex items-center gap-3 px-4 py-3 ${
+                        idx > 0 ? "border-t" : ""
+                      }`}
+                    >
+                      <div className="flex items-center justify-center size-8 rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
+                        {quantity}×
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium leading-tight">{item.name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
+                          ₱
+                          {item.price.toLocaleString("en-PH", {
+                            minimumFractionDigits: 2,
+                          })}{" "}
+                          each
+                        </p>
+                      </div>
+                      <p className="text-sm font-semibold tabular-nums shrink-0">
+                        ₱
+                        {(item.price * quantity).toLocaleString("en-PH", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -796,27 +998,31 @@ function CustomerOrderContent() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-              <UtensilsCrossed className="size-5 text-primary-foreground" />
+      <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-primary shrink-0">
+              <UtensilsCrossed className="size-4 sm:size-5 text-primary-foreground" />
             </div>
-            <div>
-              <p className="font-bold">{RESTAURANT_NAME}</p>
-              <p className="text-xs text-muted-foreground">
-                Table {table.label} • {customerName}
+            <div className="min-w-0">
+              <p className="font-bold text-sm sm:text-base truncate">
+                {RESTAURANT_NAME}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                Table {table.label} · {customerName}
               </p>
             </div>
           </div>
           <Button
-            size="lg"
-            className="relative"
+            size="default"
+            className="relative shrink-0"
             onClick={() => setShowCart(true)}
+            aria-label={`View cart with ${cartCount} item${cartCount !== 1 ? "s" : ""}`}
           >
-            <ShoppingCart className="size-5" />
+            <ShoppingCart className="size-4 sm:size-5" />
+            <span className="ml-1.5 hidden sm:inline">Cart</span>
             {cartCount > 0 && (
-              <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+              <span className="ml-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-white/20 px-1.5 text-xs font-bold">
                 {cartCount}
               </span>
             )}
@@ -830,6 +1036,7 @@ function CustomerOrderContent() {
               size="sm"
               variant={activeCategory === "all" ? "default" : "outline"}
               onClick={() => setActiveCategory("all")}
+              className="shrink-0"
             >
               All
             </Button>
@@ -839,6 +1046,7 @@ function CustomerOrderContent() {
                 size="sm"
                 variant={activeCategory === cat.id ? "default" : "outline"}
                 onClick={() => setActiveCategory(cat.id)}
+                className="shrink-0"
               >
                 {cat.name}
               </Button>
@@ -848,14 +1056,19 @@ function CustomerOrderContent() {
       </header>
 
       {/* Menu Grid */}
-      <main className="mx-auto max-w-5xl px-4 py-6">
+      <main className="mx-auto max-w-5xl px-4 py-5 sm:py-6">
         {filteredItems.length === 0 ? (
-          <div className="py-12 text-center">
-            <UtensilsCrossed className="mx-auto mb-4 size-12 text-muted-foreground/50" />
-            <p className="font-medium text-muted-foreground">No items available</p>
+          <div className="py-16 text-center">
+            <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-muted">
+              <UtensilsCrossed className="size-8 text-muted-foreground/50" />
+            </div>
+            <p className="font-semibold text-foreground">No items available</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Check back soon or try another category
+            </p>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {filteredItems.map((item) => (
               <MenuItemCard key={item.id} item={item} onAdd={addToCart} />
             ))}
@@ -871,6 +1084,10 @@ function CustomerOrderContent() {
         cartTotal={cartTotal}
         onSubmit={handleSubmitOrder}
         customerName={customerName ?? ""}
+        submitting={submitting}
+        onIncrease={(id) => updateQuantity(id, 1)}
+        onDecrease={(id) => updateQuantity(id, -1)}
+        onRemove={removeFromCart}
       />
     </div>
   )
