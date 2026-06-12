@@ -530,9 +530,10 @@ create policy "reservations_public_insert" on public.reservations for insert wit
 -- ACTIVITY LOGS — admin only
 create policy "activity_admin" on public.activity_logs for all using (is_admin());
 
--- RESTAURANT SETTINGS — staff can read, admin can write
-create policy "settings_read"  on public.restaurant_settings for select using (is_staff());
-create policy "settings_admin" on public.restaurant_settings for all using (is_admin());
+-- RESTAURANT SETTINGS — staff can read, admin can write, customers can read (public tax rate)
+create policy "settings_read"       on public.restaurant_settings for select using (is_staff());
+create policy "settings_public"     on public.restaurant_settings for select using (true);
+create policy "settings_admin"      on public.restaurant_settings for all using (is_admin());
 
 -- ============================================================
 -- STORAGE BUCKETS
