@@ -21,6 +21,7 @@ import {
   ChefHat,
   Truck,
   PartyPopper,
+  Bell,
 } from "lucide-react"
 import type { Category, MenuItem, RestaurantTable, OrderStatus } from "@/lib/types"
 
@@ -35,9 +36,24 @@ const STATUS_STEPS: { status: OrderStatus; label: string; icon: typeof Clock }[]
   { status: "served", label: "Served", icon: PartyPopper },
 ]
 
+interface TrackedOrder {
+  id: string
+  status: OrderStatus
+  subtotal: number
+  tax: number
+  total: number
+  order_items?: {
+    id: string
+    name: string
+    unit_price: number
+    quantity: number
+  }[]
+}
+
 function OrderStatusTracker({ token }: { token: string | null }) {
   const [currentStatus, setCurrentStatus] = useState<OrderStatus>("pending")
   const [loading, setLoading] = useState(true)
+  const [orderData, setOrderData] = useState<TrackedOrder | null>(null)
 
   useEffect(() => {
     if (!token) return
@@ -46,14 +62,15 @@ function OrderStatusTracker({ token }: { token: string | null }) {
       const supabase = createClient()
       const { data } = await supabase
         .from("orders")
-        .select("status")
+        .select("id, status, subtotal, tax, total, order_items(id, name, unit_price, quantity)")
         .eq("session_token", token)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
 
       if (data) {
         setCurrentStatus(data.status)
+        setOrderData(data as TrackedOrder)
       }
       setLoading(false)
     }
@@ -75,7 +92,6 @@ function OrderStatusTracker({ token }: { token: string | null }) {
     return "pending"
   }
 
-  // Once status is "served", treat the served step as completed (no more blink)
   const isFinalServed = currentStatus === "served"
   const resolvedStepState = (s: "completed" | "active" | "pending") =>
     isFinalServed && s === "active" ? "completed" : s
@@ -90,6 +106,133 @@ function OrderStatusTracker({ token }: { token: string | null }) {
     )
   }
 
+  // ── SERVED: show completion dashboard ───────────────────────────────────
+  if (currentStatus === "served" && orderData) {
+    const items = orderData.order_items ?? []
+    const itemCount = items.reduce((s, i) => s + i.quantity, 0)
+
+    return (
+      <div className="space-y-4">
+        {/* Hero completion card */}
+        <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 overflow-hidden">
+          {/* Top stripe */}
+          <div className="h-1.5 w-full bg-gradient-to-r from-green-400 to-emerald-500" />
+          <CardContent className="p-6 sm:p-8 text-center">
+            {/* Confetti burst */}
+            <div className="relative mx-auto mb-5 flex h-20 w-20 items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-green-100 animate-ping opacity-30" />
+              <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-green-500 shadow-lg shadow-green-500/30">
+                <Check className="size-10 text-white" strokeWidth={2.5} />
+              </div>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-green-700 dark:text-green-400">
+              Thank You! 🎉
+            </h2>
+            <p className="mt-2 text-sm sm:text-base text-green-600/80 dark:text-green-400/70 font-medium">
+              Your order has been delivered.
+            </p>
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+              Thank you for your patience and for dining with us.
+            </p>
+
+            {/* Items + total summary */}
+            <div className="mt-6 rounded-xl border border-green-200 bg-white/70 dark:bg-green-900/20 p-4 space-y-2 max-w-sm mx-auto">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {items.length} item{items.length !== 1 ? "s" : ""} · {itemCount} serving{itemCount !== 1 ? "s" : ""}
+                </span>
+                <span className="font-semibold tabular-nums text-green-700 dark:text-green-400">
+                  ₱{Number(orderData.total).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="border-t border-green-200 pt-2 flex items-center justify-between">
+                <span className="font-semibold text-sm">Amount Due</span>
+                <span className="text-xl font-black text-green-700 dark:text-green-400 tabular-nums">
+                  ₱{Number(orderData.total).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Next steps */}
+        <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
+          <CardContent className="p-5 sm:p-6">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/50">
+                <Bell className="size-4 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm text-amber-800 dark:text-amber-200">
+                  Ready for Payment
+                </h4>
+                <p className="mt-1 text-xs text-amber-600/80 dark:text-amber-400/70 leading-relaxed">
+                  Please proceed to the counter to settle your bill. If you need any assistance, feel free to call our staff — we'll be happy to help!
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Itemized list */}
+        <Card>
+          <CardContent className="p-5 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-sm">Your Order</h3>
+              <span className="text-xs text-muted-foreground">
+                {itemCount} item{itemCount !== 1 ? "s" : ""}
+              </span>
+            </div>
+            <div className="space-y-1 rounded-lg border overflow-hidden">
+              {items.map((item, idx) => (
+                <div
+                  key={item.id}
+                  className={`flex items-center gap-3 px-4 py-3 ${idx > 0 ? "border-t" : ""}`}
+                >
+                  <div className="flex size-7 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400 text-xs font-semibold shrink-0">
+                    {item.quantity}×
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium leading-tight truncate">{item.name}</p>
+                    <p className="text-xs text-muted-foreground tabular-nums">
+                      ₱{Number(item.unit_price).toLocaleString("en-PH", { minimumFractionDigits: 2 })} each
+                    </p>
+                  </div>
+                  <p className="text-sm font-semibold tabular-nums shrink-0">
+                    ₱{(Number(item.unit_price) * item.quantity).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+              ))}
+            </div>
+            {/* Totals */}
+            <div className="mt-4 space-y-1.5 rounded-lg border bg-muted/30 p-3">
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="tabular-nums font-medium">
+                  ₱{Number(orderData.subtotal).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Tax</span>
+                <span className="tabular-nums font-medium">
+                  ₱{Number(orderData.tax).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <div className="flex justify-between border-t pt-1.5">
+                <span className="text-sm font-semibold">Total</span>
+                <span className="text-lg font-black text-primary tabular-nums">
+                  ₱{Number(orderData.total).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // ── IN PROGRESS: show step tracker ─────────────────────────────────────
   return (
     <Card>
       <CardContent className="p-6">
