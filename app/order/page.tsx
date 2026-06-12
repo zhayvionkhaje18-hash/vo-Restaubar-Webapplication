@@ -699,9 +699,10 @@ function CustomerOrderContent() {
 
     setSubmitting(true)
 
-    const effectiveTaxRate = taxRate
-    const tax = Math.round(cartTotal * effectiveTaxRate * 100) / 100
-    const total = Math.round((cartTotal + tax) * 100) / 100
+    // Compute totals fresh from current state to avoid stale closures
+    const currentCartTotal = cart.reduce((sum, c) => sum + c.item.price * c.quantity, 0)
+    const currentTax = Math.round(currentCartTotal * taxRate * 100) / 100
+    const currentTotal = Math.round((currentCartTotal + currentTax) * 100) / 100
 
     // Create order
     const { data: orderData, error: orderError } = await supabase
@@ -712,9 +713,9 @@ function CustomerOrderContent() {
         customer_name: customerName,
         status: "pending",
         payment_status: "unpaid",
-        subtotal: cartTotal,
-        tax,
-        total,
+        subtotal: currentCartTotal,
+        tax: currentTax,
+        total: currentTotal,
         notes: null,
       })
       .select()
@@ -744,13 +745,23 @@ function CustomerOrderContent() {
       return
     }
 
-    setOrderNumber(orderData.order_number)
-    setOrderTotal(total)
-    setOrderItems([...cart])
+    // Capture values before async gap
+    const finalOrderNumber = orderData.order_number
+    const finalTotal = currentTotal
+    const finalCart = [...cart]
+
+    // Clear cart immediately so it doesn't re-render with stale data
     setCart([])
     setShowCart(false)
     setSubmitting(false)
-    setOrderPlaced(true)
+
+    // Show confirmation — use setTimeout to ensure React processes the state flush
+    setTimeout(() => {
+      setOrderNumber(finalOrderNumber)
+      setOrderTotal(finalTotal)
+      setOrderItems(finalCart)
+      setOrderPlaced(true)
+    }, 50)
   }
 
   // No token
