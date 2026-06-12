@@ -1025,52 +1025,8 @@ function CustomerOrderContent() {
             </CardContent>
           </Card>
 
-          {/* Status Tracker */}
+          {/* Status Tracker — shows step tracker or completion dashboard if served */}
           <OrderStatusTracker token={token} />
-
-          {/* Order Items */}
-          {orderItems.length > 0 && (
-            <Card>
-              <CardContent className="p-5 sm:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-base">Your Order Items</h3>
-                  <span className="text-xs text-muted-foreground">
-                    {orderItems.length} item{orderItems.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
-                <div className="space-y-1 rounded-lg border overflow-hidden">
-                  {orderItems.map(({ item, quantity }, idx) => (
-                    <div
-                      key={item.id}
-                      className={`flex items-center gap-3 px-4 py-3 ${
-                        idx > 0 ? "border-t" : ""
-                      }`}
-                    >
-                      <div className="flex items-center justify-center size-8 rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
-                        {quantity}×
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium leading-tight">{item.name}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
-                          ₱
-                          {item.price.toLocaleString("en-PH", {
-                            minimumFractionDigits: 2,
-                          })}{" "}
-                          each
-                        </p>
-                      </div>
-                      <p className="text-sm font-semibold tabular-nums shrink-0">
-                        ₱
-                        {(item.price * quantity).toLocaleString("en-PH", {
-                          minimumFractionDigits: 2,
-                        })}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </main>
       </div>
     )
