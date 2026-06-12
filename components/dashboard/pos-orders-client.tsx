@@ -72,7 +72,6 @@ const NEXT_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
   confirmed: "preparing",
   preparing: "ready",
   ready: "served",
-  served: "completed",
 }
 
 const STATUS_ACTION: Record<OrderStatus, { label: string; icon: React.ReactNode; variant: "default" | "secondary" | "outline" }> = {
@@ -254,7 +253,7 @@ export function PosOrdersClient({
           <TabsTrigger value="all">
             All ({orders.length})
           </TabsTrigger>
-          {(["pending", "confirmed", "preparing", "ready", "served"] as OrderStatus[]).map(
+          {(["pending", "confirmed", "preparing", "ready", "served", "completed"] as OrderStatus[]).map(
             (s) =>
               counts[s] ? (
                 <TabsTrigger key={s} value={s}>
@@ -473,6 +472,11 @@ export function PosOrdersClient({
                               <CreditCard className="size-3.5" />
                               <span className="ml-1.5">Process Payment</span>
                             </Button>
+                          )}
+                          {selectedOrder?.status === "completed" && (
+                            <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50 dark:bg-green-950/20 dark:border-green-800 dark:text-green-400">
+                              <Check className="size-3 mr-1" /> Completed
+                            </Badge>
                           )}
                         </>
                       )}
@@ -703,10 +707,15 @@ function OrderCard({
             </Button>
           )}
           {order.status === "served" && order.payment_status !== "paid" && (
-            <Button size="sm" onClick={onPay} disabled={pending}>
+            <Button size="sm" onClick={onPay} disabled={pending} className="bg-emerald-600 hover:bg-emerald-700">
               <CreditCard className="size-3.5" />
-              <span className="ml-1.5">Pay</span>
+              <span className="ml-1.5">Process Payment</span>
             </Button>
+          )}
+          {order.status === "served" && order.payment_status === "paid" && (
+            <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50 dark:bg-green-950/20 dark:border-green-800 dark:text-green-400">
+              <Check className="size-3 mr-1" /> Completed
+            </Badge>
           )}
         </div>
       </CardContent>
