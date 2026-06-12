@@ -595,7 +595,6 @@ function CustomerOrderContent() {
 
   // Load table, categories, menu, and settings
   useEffect(() => {
-  useEffect(() => {
     if (!token) return
 
     async function load() {
