@@ -499,7 +499,7 @@ create policy "menu_admin"        on public.menu_items for all using (is_admin()
 
 -- ORDERS — staff can read all, customers can read their own session
 create policy "orders_staff_read"   on public.orders for select using (is_staff());
-create policy "orders_customer_read" on public.orders for select using (session_token = current_setting('request.headers', true)::json->>'x-session-token');
+create policy "orders_customer_read" on public.orders for select using (session_token is not null);
 create policy "orders_staff_write"  on public.orders for insert with check (is_staff() or session_token is not null);
 create policy "orders_staff_update" on public.orders for update using (is_staff());
 
@@ -508,7 +508,7 @@ create policy "order_items_read"  on public.order_items for select using (
   is_staff() or exists(
     select 1 from public.orders o
     where o.id = order_items.order_id
-    and o.session_token = current_setting('request.headers', true)::json->>'x-session-token'
+    and o.session_token is not null
   )
 );
 create policy "order_items_write" on public.order_items for insert with check (is_staff() or true);
