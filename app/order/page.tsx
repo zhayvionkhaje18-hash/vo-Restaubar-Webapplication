@@ -750,18 +750,16 @@ function CustomerOrderContent() {
     const finalTotal = currentTotal
     const finalCart = [...cart]
 
-    // Clear cart immediately so it doesn't re-render with stale data
+    // Show confirmation FIRST — this triggers the re-render immediately
+    setOrderPlaced(true)
+    setOrderNumber(finalOrderNumber)
+    setOrderTotal(finalTotal)
+    setOrderItems(finalCart)
+
+    // Then clear the cart/drawer — happens in same batch after confirmation renders
     setCart([])
     setShowCart(false)
     setSubmitting(false)
-
-    // Show confirmation — use setTimeout to ensure React processes the state flush
-    setTimeout(() => {
-      setOrderNumber(finalOrderNumber)
-      setOrderTotal(finalTotal)
-      setOrderItems(finalCart)
-      setOrderPlaced(true)
-    }, 50)
   }
 
   // No token
