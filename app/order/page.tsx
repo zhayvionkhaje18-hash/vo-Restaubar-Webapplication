@@ -416,6 +416,7 @@ function CartDrawer({
   onClose,
   cartItems,
   cartTotal,
+  taxRate,
   onSubmit,
   customerName,
   submitting,
@@ -424,13 +425,13 @@ function CartDrawer({
   onClose: () => void
   cartItems: { item: MenuItem; quantity: number }[]
   cartTotal: number
+  taxRate: number
   onSubmit: () => void
   customerName: string
   submitting: boolean
 }) {
   // Tax and total calculated
-  const TAX_RATE = 0.12
-  const tax = Math.round(cartTotal * TAX_RATE * 100) / 100
+  const tax = Math.round(cartTotal * taxRate * 100) / 100
   const grandTotal = Math.round((cartTotal + tax) * 100) / 100
   const itemCount = cartItems.reduce((sum, c) => sum + c.quantity, 0)
 
@@ -505,7 +506,7 @@ function CartDrawer({
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Tax (12%)</span>
+                <span className="text-muted-foreground">Tax ({Math.round(taxRate * 100)}%)</span>
                 <span className="tabular-nums font-medium">
                   ₱{tax.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
                 </span>
@@ -590,8 +591,10 @@ function CustomerOrderContent() {
   const [orderTotal, setOrderTotal] = useState<number>(0)
   const [orderItems, setOrderItems] = useState<CartItem[]>([])
   const [activeCategory, setActiveCategory] = useState<string>("all")
+  const [taxRate, setTaxRate] = useState<number>(0.12) // default fallback
 
-  // Load table, categories, and menu
+  // Load table, categories, menu, and settings
+  useEffect(() => {
   useEffect(() => {
     if (!token) return
 
@@ -637,6 +640,18 @@ function CustomerOrderContent() {
         .order("name")
 
       setMenuItems(menuData ?? [])
+
+      // Get tax rate from settings
+      const { data: settingsData } = await supabase
+        .from("restaurant_settings")
+        .select("tax_rate")
+        .limit(1)
+        .maybeSingle()
+
+      if (settingsData?.tax_rate != null) {
+        setTaxRate(settingsData.tax_rate / 100) // stored as 12, convert to 0.12
+      }
+
       setLoading(false)
     }
 
@@ -684,7 +699,8 @@ function CustomerOrderContent() {
 
     setSubmitting(true)
 
-    const tax = Math.round(cartTotal * 0.12 * 100) / 100
+    const effectiveTaxRate = taxRate
+    const tax = Math.round(cartTotal * effectiveTaxRate * 100) / 100
     const total = Math.round((cartTotal + tax) * 100) / 100
 
     // Create order
@@ -734,6 +750,7 @@ function CustomerOrderContent() {
     setCart([])
     setShowCart(false)
     setSubmitting(false)
+    setOrderPlaced(true)
   }
 
   // No token
@@ -985,6 +1002,7 @@ function CustomerOrderContent() {
         onClose={() => setShowCart(false)}
         cartItems={cart}
         cartTotal={cartTotal}
+        taxRate={taxRate}
         onSubmit={handleSubmitOrder}
         customerName={customerName ?? ""}
         submitting={submitting}
