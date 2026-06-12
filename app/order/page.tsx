@@ -75,6 +75,11 @@ function OrderStatusTracker({ token }: { token: string | null }) {
     return "pending"
   }
 
+  // Once status is "served", treat the served step as completed (no more blink)
+  const isFinalServed = currentStatus === "served"
+  const resolvedStepState = (s: "completed" | "active" | "pending") =>
+    isFinalServed && s === "active" ? "completed" : s
+
   if (loading) {
     return (
       <Card>
@@ -91,7 +96,7 @@ function OrderStatusTracker({ token }: { token: string | null }) {
         <h3 className="font-semibold mb-4 text-center">Order Status</h3>
         <div className="space-y-0">
           {STATUS_STEPS.map((step, index) => {
-            const state = getStepState(step.status)
+            const state = resolvedStepState(getStepState(step.status))
             const Icon = step.icon
             const isLast = index === STATUS_STEPS.length - 1
 
@@ -108,7 +113,11 @@ function OrderStatusTracker({ token }: { token: string | null }) {
                         : "bg-muted border-muted-foreground/30 text-muted-foreground"
                     }`}
                   >
-                    <Icon className="size-5" />
+                    {state === "completed" ? (
+                      <Check className="size-5" />
+                    ) : (
+                      <Icon className="size-5" />
+                    )}
                   </div>
                   {!isLast && (
                     <div
