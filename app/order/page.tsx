@@ -755,112 +755,15 @@ function CustomerOrderContent() {
 
   // Loading
   if (loading) {
-  return (
-    <Card className="border-0 shadow-2xl shadow-black/40">
-      <CardContent className="p-6 sm:p-8 text-center">
-        {/* Restaurant Logo/Icon */}
-        <div className="mx-auto mb-5 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg">
-          <UtensilsCrossed className="size-8 sm:size-10 text-white" />
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground">Loading menu...</p>
         </div>
-
-        {/* Welcome Text */}
-        <h1 className="mb-1.5 text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-          Welcome to
-        </h1>
-        <p className="mb-1 text-2xl sm:text-3xl font-extrabold tracking-tight text-primary">
-          {RESTAURANT_NAME}
-        </p>
-        <p className="mb-6 text-sm text-muted-foreground">
-          Fine dining, delivered to your table
-        </p>
-
-        {/* Table Info */}
-        {table && (
-          <div className="mb-6 rounded-xl border bg-muted/40 px-4 py-3.5">
-            <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-              Your Table
-            </p>
-            <p className="text-2xl sm:text-3xl font-black text-primary mt-0.5">
-              {table.label}
-            </p>
-            {table.zone && (
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                {table.zone}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Code + Name Input */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Table Code Input */}
-          <div className="text-left space-y-1.5">
-            <Label htmlFor="tableCode" className="text-sm font-semibold">
-              Table Code <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="tableCode"
-              placeholder="Enter 4-digit code"
-              value={code}
-              onChange={(e) => {
-                setCode(e.target.value.replace(/\D/g, '').slice(0, 4))
-                setCodeError("")
-              }}
-              className="h-12 text-center text-xl sm:text-2xl font-black tracking-[0.4em]"
-              maxLength={4}
-              required
-            />
-            {codeError && (
-              <p className="text-xs text-destructive font-medium">{codeError}</p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Find the code on your table&apos;s QR card
-            </p>
-          </div>
-
-          {/* Name Input */}
-          <div className="text-left space-y-1.5">
-            <Label htmlFor="customerName" className="text-sm font-semibold">
-              Your Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="customerName"
-              placeholder="Enter your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="h-12 text-base"
-              autoComplete="name"
-              required
-            />
-          </div>
-
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full h-12 text-base font-semibold mt-2"
-            disabled={!name.trim() || code.length !== 4 || loading}
-          >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Please wait...
-              </span>
-            ) : (
-              <>
-                <UtensilsCrossed className="mr-2 size-5" />
-                View Menu & Order
-              </>
-            )}
-          </Button>
-        </form>
-
-        <p className="mt-5 text-xs text-muted-foreground">
-          Your order will be sent directly to our kitchen
-        </p>
-      </CardContent>
-    </Card>
-  )
-}
+      </div>
+    )
+  }
 
   // Table not found
   if (!table) {
