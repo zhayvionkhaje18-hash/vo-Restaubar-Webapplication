@@ -281,7 +281,7 @@ function WelcomeModal({
             </form>
 
             <p className="mt-4 text-xs text-muted-foreground">
-              Your order will be sent directly to our kitchen
+              Waiter will confirm your order shortly
             </p>
           </CardContent>
         </Card>
@@ -831,7 +831,7 @@ function CustomerOrderContent() {
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Order Placed!</h1>
             <p className="mt-2 text-sm sm:text-base text-primary-foreground/90">
-              Your order has been sent to our kitchen
+              Your order has been sent to our Staff
             </p>
           </div>
         </header>
