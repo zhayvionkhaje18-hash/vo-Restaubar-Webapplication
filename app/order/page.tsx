@@ -301,9 +301,10 @@ function MenuItemCard({
   onAdd: (item: MenuItem) => void
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-xl border bg-card transition-all hover:shadow-md hover:border-primary/30 flex flex-col">
+    <div className="group relative overflow-hidden rounded-xl border bg-card transition-all hover:shadow-md hover:border-primary/30 flex flex-row min-h-[140px]">
+      {/* Left — image */}
       {item.image_url && (
-        <div className="aspect-video w-full overflow-hidden bg-muted">
+        <div className="w-36 sm:w-44 shrink-0 overflow-hidden bg-muted">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={item.image_url}
@@ -312,28 +313,39 @@ function MenuItemCard({
           />
         </div>
       )}
-      <CardContent className="p-4 sm:p-5 flex-1 flex flex-col">
-        <div className="flex items-start justify-between gap-3 mb-2">
-          <h3 className="font-semibold text-base leading-tight flex-1 min-w-0">
-            {item.name}
-          </h3>
-          <p className="text-lg font-bold text-primary whitespace-nowrap tabular-nums shrink-0">
-            ₱{item.price.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-          </p>
+      {/* No image placeholder */}
+      {!item.image_url && (
+        <div className="w-20 sm:w-28 shrink-0 flex items-center justify-center bg-muted">
+          <UtensilsCrossed className="size-8 text-muted-foreground/40" />
         </div>
-        {item.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-4">
-            {item.description}
-          </p>
-        )}
-        <div className="mt-auto pt-2">
+      )}
+
+      {/* Right — text content */}
+      <CardContent className="p-3 sm:p-4 flex flex-col justify-between flex-1 min-w-0">
+        <div>
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h3 className="font-semibold text-sm sm:text-base leading-tight flex-1 min-w-0 truncate">
+              {item.name}
+            </h3>
+            <p className="text-base sm:text-lg font-bold text-primary whitespace-nowrap tabular-nums shrink-0">
+              ₱{item.price.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+          {item.description && (
+            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+              {item.description}
+            </p>
+          )}
+        </div>
+        <div className="mt-2">
           <Button
-            className="w-full h-10 font-medium"
+            size="sm"
+            className="h-8 w-full sm:w-auto font-medium text-xs"
             onClick={() => onAdd(item)}
             disabled={!item.is_available}
           >
-            <Plus className="mr-1.5 size-4" />
-            {item.is_available ? "Add to Order" : "Unavailable"}
+            <Plus className="mr-1 size-3.5" />
+            {item.is_available ? "Add" : "Unavailable"}
           </Button>
         </div>
       </CardContent>
@@ -996,7 +1008,7 @@ function CustomerOrderContent() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
             {filteredItems.map((item) => (
               <MenuItemCard key={item.id} item={item} onAdd={addToCart} />
             ))}
