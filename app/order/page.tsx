@@ -913,7 +913,7 @@ function CustomerOrderContent() {
   const filteredItems =
     activeCategory === "all"
       ? menuItems
-      : menuItems.filter((m) => m.category_id === activeCategory)
+      : menuItems.filter((m) => m.category_id === activeCategory))
 
   return (
     <div className="min-h-screen bg-background">
