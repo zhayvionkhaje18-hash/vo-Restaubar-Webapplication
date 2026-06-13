@@ -752,7 +752,6 @@ function CustomerOrderContent() {
   const [submitting, setSubmitting] = useState(false)
   const [orderPlaced, setOrderPlaced] = useState(false)
   const [orderNumber, setOrderNumber] = useState<number | null>(null)
-  const [orderTotal, setOrderTotal] = useState<number>(0)
   const [activeCategory, setActiveCategory] = useState<string>("all")
   const [taxRate, setTaxRate] = useState<number>(0.12) // default fallback
 
@@ -907,14 +906,9 @@ function CustomerOrderContent() {
       return
     }
 
-    // Capture values before async gap
-    const finalOrderNumber = orderData.order_number
-    const finalTotal = currentTotal
-
     // Show confirmation FIRST — this triggers the re-render immediately
     setOrderPlaced(true)
-    setOrderNumber(finalOrderNumber)
-    setOrderTotal(finalTotal)
+    setOrderNumber(orderData.order_number)
 
     // Then clear the cart/drawer — happens in same batch after confirmation renders
     setCart([])
@@ -996,7 +990,7 @@ function CustomerOrderContent() {
                 #{orderNumber}
               </p>
             </div>
-            <CardContent className="p-5 sm:p-6 space-y-5">
+            <CardContent className="p-5 sm:p-6">
               <div className="grid grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
@@ -1010,14 +1004,6 @@ function CustomerOrderContent() {
                   </p>
                   <p className="font-bold text-lg sm:text-xl truncate">{customerName}</p>
                 </div>
-              </div>
-              <div className="border-t pt-5">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                  Total Amount
-                </p>
-                <p className="text-3xl sm:text-4xl font-black text-primary tabular-nums">
-                  ₱{orderTotal.toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-                </p>
               </div>
             </CardContent>
           </Card>
