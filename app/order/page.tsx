@@ -106,11 +106,78 @@ function OrderStatusTracker({ token }: { token: string | null }) {
     )
   }
 
-  // ── SERVED: show completion dashboard ───────────────────────────────────
-  if (currentStatus === "served" && orderData) {
-    const items = orderData.order_items ?? []
-    const itemCount = items.reduce((s, i) => s + i.quantity, 0)
+  const items = orderData?.order_items ?? []
+  const itemCount = items.reduce((s, i) => s + i.quantity, 0)
+  const isServed = currentStatus === "served" && orderData
 
+  // Reusable itemized list with totals — shown in both states
+  const ItemizedOrderCard = (
+    <Card>
+      <CardContent className="p-5 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-sm">Your Order</h3>
+          <span className="text-xs text-muted-foreground">
+            {itemCount} item{itemCount !== 1 ? "s" : ""}
+          </span>
+        </div>
+        <div className="space-y-1 rounded-lg border overflow-hidden">
+          {items.map((item, idx) => (
+            <div
+              key={item.id}
+              className={`flex items-center gap-3 px-4 py-3 ${idx > 0 ? "border-t" : ""}`}
+            >
+              <div
+                className={`flex size-7 items-center justify-center rounded-full text-xs font-semibold shrink-0 ${
+                  isServed
+                    ? "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400"
+                    : "bg-primary/10 text-primary"
+                }`}
+              >
+                {item.quantity}×
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium leading-tight truncate">{item.name}</p>
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  ₱{Number(item.unit_price).toLocaleString("en-PH", { minimumFractionDigits: 2 })} each
+                </p>
+              </div>
+              <p className="text-sm font-semibold tabular-nums shrink-0">
+                ₱{(Number(item.unit_price) * item.quantity).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+          ))}
+        </div>
+        {/* Totals */}
+        <div className="mt-4 space-y-1.5 rounded-lg border bg-muted/30 p-3">
+          <div className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Subtotal</span>
+            <span className="tabular-nums font-medium">
+              ₱{Number(orderData?.subtotal ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+            </span>
+          </div>
+          <div className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Tax</span>
+            <span className="tabular-nums font-medium">
+              ₱{Number(orderData?.tax ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+            </span>
+          </div>
+          <div className="flex justify-between border-t pt-1.5">
+            <span className="text-sm font-semibold">Total</span>
+            <span
+              className={`text-lg font-black tabular-nums ${
+                isServed ? "text-green-700 dark:text-green-400" : "text-primary"
+              }`}
+            >
+              ₱{Number(orderData?.total ?? 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+  // ── SERVED: show completion dashboard on top, then itemized list ────────
+  if (isServed) {
     return (
       <div className="space-y-4">
         {/* Hero completion card */}
@@ -136,20 +203,19 @@ function OrderStatusTracker({ token }: { token: string | null }) {
               Thank you for your patience and for dining with us.
             </p>
 
-            {/* Items + total summary */}
             <div className="mt-6 rounded-xl border border-green-200 bg-white/70 dark:bg-green-900/20 p-4 space-y-2 max-w-sm mx-auto">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">
                   {items.length} item{items.length !== 1 ? "s" : ""} · {itemCount} serving{itemCount !== 1 ? "s" : ""}
                 </span>
                 <span className="font-semibold tabular-nums text-green-700 dark:text-green-400">
-                  ₱{Number(orderData.total).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                  ₱{Number(orderData!.total).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
                 </span>
               </div>
               <div className="border-t border-green-200 pt-2 flex items-center justify-between">
                 <span className="font-semibold text-sm">Amount Due</span>
                 <span className="text-xl font-black text-green-700 dark:text-green-400 tabular-nums">
-                  ₱{Number(orderData.total).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
+                  ₱{Number(orderData!.total).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
@@ -175,126 +241,78 @@ function OrderStatusTracker({ token }: { token: string | null }) {
           </CardContent>
         </Card>
 
-        {/* Itemized list */}
-        <Card>
-          <CardContent className="p-5 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-sm">Your Order</h3>
-              <span className="text-xs text-muted-foreground">
-                {itemCount} item{itemCount !== 1 ? "s" : ""}
-              </span>
-            </div>
-            <div className="space-y-1 rounded-lg border overflow-hidden">
-              {items.map((item, idx) => (
-                <div
-                  key={item.id}
-                  className={`flex items-center gap-3 px-4 py-3 ${idx > 0 ? "border-t" : ""}`}
-                >
-                  <div className="flex size-7 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400 text-xs font-semibold shrink-0">
-                    {item.quantity}×
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium leading-tight truncate">{item.name}</p>
-                    <p className="text-xs text-muted-foreground tabular-nums">
-                      ₱{Number(item.unit_price).toLocaleString("en-PH", { minimumFractionDigits: 2 })} each
-                    </p>
-                  </div>
-                  <p className="text-sm font-semibold tabular-nums shrink-0">
-                    ₱{(Number(item.unit_price) * item.quantity).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-              ))}
-            </div>
-            {/* Totals */}
-            <div className="mt-4 space-y-1.5 rounded-lg border bg-muted/30 p-3">
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span className="tabular-nums font-medium">
-                  ₱{Number(orderData.subtotal).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Tax</span>
-                <span className="tabular-nums font-medium">
-                  ₱{Number(orderData.tax).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              <div className="flex justify-between border-t pt-1.5">
-                <span className="text-sm font-semibold">Total</span>
-                <span className="text-lg font-black text-primary tabular-nums">
-                  ₱{Number(orderData.total).toLocaleString("en-PH", { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {ItemizedOrderCard}
       </div>
     )
   }
 
-  // ── IN PROGRESS: show step tracker ─────────────────────────────────────
+  // ── IN PROGRESS: step tracker + itemized list ──────────────────────────
   return (
-    <Card>
-      <CardContent className="p-6">
-        <h3 className="font-semibold mb-4 text-center">Order Status</h3>
-        <div className="space-y-0">
-          {STATUS_STEPS.map((step, index) => {
-            const state = resolvedStepState(getStepState(step.status))
-            const Icon = step.icon
-            const isLast = index === STATUS_STEPS.length - 1
+    <div className="space-y-4">
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="font-semibold mb-4 text-center">Order Status</h3>
+          <div className="space-y-0">
+            {STATUS_STEPS.map((step, index) => {
+              const state = resolvedStepState(getStepState(step.status))
+              const Icon = step.icon
+              const isLast = index === STATUS_STEPS.length - 1
 
-            return (
-              <div key={step.status} className="flex items-start gap-4">
-                {/* Icon & Line */}
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
-                      state === "completed"
-                        ? "bg-green-500 border-green-500 text-white"
-                        : state === "active"
-                        ? "bg-primary border-primary text-primary-foreground animate-pulse"
-                        : "bg-muted border-muted-foreground/30 text-muted-foreground"
-                    }`}
-                  >
-                    {state === "completed" ? (
-                      <Check className="size-5" />
-                    ) : (
-                      <Icon className="size-5" />
+              return (
+                <div key={step.status} className="flex items-start gap-4">
+                  {/* Icon & Line */}
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
+                        state === "completed"
+                          ? "bg-green-500 border-green-500 text-white"
+                          : state === "active"
+                          ? "bg-primary border-primary text-primary-foreground animate-pulse"
+                          : "bg-muted border-muted-foreground/30 text-muted-foreground"
+                      }`}
+                    >
+                      {state === "completed" ? (
+                        <Check className="size-5" />
+                      ) : (
+                        <Icon className="size-5" />
+                      )}
+                    </div>
+                    {!isLast && (
+                      <div
+                        className={`h-8 w-0.5 ${
+                          state === "completed" ? "bg-green-500" : "bg-muted-foreground/20"
+                        }`}
+                      />
                     )}
                   </div>
-                  {!isLast && (
-                    <div
-                      className={`h-8 w-0.5 ${
-                        state === "completed" ? "bg-green-500" : "bg-muted-foreground/20"
-                      }`}
-                    />
-                  )}
-                </div>
 
-                {/* Label */}
-                <div className="flex-1 pb-6">
-                  <p className={`font-medium ${state === "active" ? "text-primary" : ""}`}>
-                    {step.label}
-                  </p>
-                  {state === "completed" && (
-                    <p className="text-xs text-green-600">Done</p>
-                  )}
-                  {state === "active" && (
-                    <p className="text-xs text-muted-foreground">In progress...</p>
-                  )}
+                  {/* Label */}
+                  <div className="flex-1 pb-6">
+                    <p className={`font-medium ${state === "active" ? "text-primary" : ""}`}>
+                      {step.label}
+                    </p>
+                    {state === "completed" && (
+                      <p className="text-xs text-green-600">Done</p>
+                    )}
+                    {state === "active" && (
+                      <p className="text-xs text-muted-foreground">In progress...</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
 
-        <div className="mt-4 rounded-lg bg-muted/50 p-3 text-center">
-          <p className="text-sm text-muted-foreground">
-            Status updates automatically as our staff prepares your order
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="mt-4 rounded-lg bg-muted/50 p-3 text-center">
+            <p className="text-sm text-muted-foreground">
+              Status updates automatically as our staff prepares your order
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {ItemizedOrderCard}
+    </div>
   )
 }
 
