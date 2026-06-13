@@ -753,7 +753,6 @@ function CustomerOrderContent() {
   const [orderPlaced, setOrderPlaced] = useState(false)
   const [orderNumber, setOrderNumber] = useState<number | null>(null)
   const [orderTotal, setOrderTotal] = useState<number>(0)
-  const [orderItems, setOrderItems] = useState<CartItem[]>([])
   const [activeCategory, setActiveCategory] = useState<string>("all")
   const [taxRate, setTaxRate] = useState<number>(0.12) // default fallback
 
@@ -911,13 +910,11 @@ function CustomerOrderContent() {
     // Capture values before async gap
     const finalOrderNumber = orderData.order_number
     const finalTotal = currentTotal
-    const finalCart = [...cart]
 
     // Show confirmation FIRST — this triggers the re-render immediately
     setOrderPlaced(true)
     setOrderNumber(finalOrderNumber)
     setOrderTotal(finalTotal)
-    setOrderItems(finalCart)
 
     // Then clear the cart/drawer — happens in same batch after confirmation renders
     setCart([])
