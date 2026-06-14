@@ -1334,7 +1334,7 @@ function CustomerOrderContent() {
           />
 
           {/* Play While Waiting — game link */}
-          {sessionState.kind === "active" && (
+          {sessionState.kind === "active" && sessionState.sessionId && (
             <a
               href={`/play?session_id=${sessionState.sessionId}&table_id=${table?.id ?? ""}&name=${encodeURIComponent(sessionState.myName)}&token=${token ?? ""}`}
               className="group flex items-center justify-between gap-3 rounded-2xl border-2 border-purple-200 dark:border-purple-800/50 bg-gradient-to-r from-purple-50 via-pink-50 to-amber-50 dark:from-purple-950/40 dark:via-pink-950/30 dark:to-amber-950/30 p-4 sm:p-5 transition-all hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/20 hover:-translate-y-0.5"
