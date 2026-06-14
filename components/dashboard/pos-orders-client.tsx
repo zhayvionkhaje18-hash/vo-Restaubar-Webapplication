@@ -50,10 +50,12 @@ import {
   addPosOrderItem,
 } from "@/app/actions/pos"
 import { MenuBrowserModal } from "@/components/dashboard/assist-modal"
+import { CancelOrderModal } from "@/components/pos/cancel-order-modal"
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/pos", label: "POS Terminal", icon: "LayoutDashboard" },
   { href: "/pos/orders", label: "Orders", icon: "ShoppingCart" },
+  { href: "/pos/tables", label: "Tables", icon: "Utensils" },
   { href: "/pos/receipts", label: "Receipts", icon: "Receipt" },
 ]
 
@@ -108,6 +110,8 @@ export function PosOrdersClient({
     amountTendered: "",
   })
   const [showMenuModal, setShowMenuModal] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [orderToCancel, setOrderToCancel] = useState<OrderWithItems | null>(null)
 
   const filtered = orders.filter((o) => {
     if (!o.status) return false
@@ -147,17 +151,12 @@ export function PosOrdersClient({
     })
   }
 
-  const handleCancel = (order: OrderWithItems) => {
-    if (!confirm("Cancel this order?")) return
-    startTransition(async () => {
-      const result = await cancelPosOrder(order.id)
-      if (result?.error) {
-        alert(result.error)
-        return
-      }
-      setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, status: "cancelled" } : o)))
+  const handleCancelSuccess = (orderId: string) => {
+    setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: "cancelled" } : o)))
+    if (selectedOrder?.id === orderId) {
       setSelectedOrder(null)
-    })
+    }
+    setOrderToCancel(null)
   }
 
   const openPayDialog = (order: OrderWithItems) => {
@@ -212,7 +211,14 @@ export function PosOrdersClient({
         return
       }
       setPayDialog((d) => ({ ...d, open: false }))
-      setOrders((prev) => prev.filter((o) => o.id !== selectedOrder.id))
+      // Update order status to completed and mark as paid
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === selectedOrder.id
+            ? { ...o, status: "completed", payment_status: "paid" }
+            : o
+        )
+      )
       setSelectedOrder(null)
     })
   }
@@ -315,7 +321,6 @@ export function PosOrdersClient({
                   order={order}
                   onView={() => setSelectedOrder(order)}
                   onStatusUpdate={(s) => handleStatusUpdate(order, s)}
-                  onCancel={() => handleCancel(order)}
                   onPay={() => openPayDialog(order)}
                   pending={pending}
                 />
@@ -462,7 +467,10 @@ export function PosOrdersClient({
                           </Button>
                           <Button
                             variant="outline"
-                            onClick={() => handleCancel(selectedOrder)}
+                            onClick={() => {
+                              setOrderToCancel(selectedOrder)
+                              setShowCancelModal(true)
+                            }}
                             disabled={pending}
                             size="sm"
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -644,6 +652,17 @@ export function PosOrdersClient({
           addItem={addPosOrderItem}
         />
       )}
+
+      {/* Cancel Order Modal */}
+      <CancelOrderModal
+        order={orderToCancel}
+        open={showCancelModal}
+        onClose={() => {
+          setShowCancelModal(false)
+          setOrderToCancel(null)
+        }}
+        onSuccess={handleCancelSuccess}
+      />
     </StaffShell>
   )
 }
@@ -652,14 +671,12 @@ function OrderCard({
   order,
   onView,
   onStatusUpdate,
-  onCancel,
   onPay,
   pending,
 }: {
   order: OrderWithItems
   onView: () => void
   onStatusUpdate: (s: OrderStatus) => void
-  onCancel: () => void
   onPay: () => void
   pending: boolean
 }) {
@@ -667,66 +684,61 @@ function OrderCard({
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div>
-            <CardTitle className="text-base">
+      <CardHeader className="pb-3">
+        {/* Header: Order # + Status Badge */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-muted-foreground mb-1">Order</p>
+            <CardTitle className="text-base font-bold tracking-tight">
               #{order.order_number}
-              {order.tables && (
-                <span className="ml-2 text-sm font-normal text-muted-foreground">
-                  {order.tables.label}
-                </span>
-              )}
             </CardTitle>
-            {order.customer_name && (
-              <p className="text-sm text-muted-foreground">{order.customer_name}</p>
-            )}
           </div>
-<Badge className={STATUS_CONFIG[order.status as OrderStatus]?.color ?? "bg-gray-100"}>
-                  {STATUS_CONFIG[order.status as OrderStatus]?.label ?? order.status}
+          <Badge className={STATUS_CONFIG[order.status as OrderStatus]?.color ?? "bg-gray-100"}>
+            {STATUS_CONFIG[order.status as OrderStatus]?.label ?? order.status}
           </Badge>
         </div>
-        <p className="text-xs text-muted-foreground">
-          <Clock className="inline size-3 mr-1" />
-          {formatDateTime(order.created_at)}
-        </p>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {/* Items preview */}
-        <div className="space-y-1 text-sm">
-          {order.order_items?.slice(0, 4).map((item) => (
-            <div key={item.id} className="flex justify-between">
-              <span className="text-muted-foreground">
-                {item.quantity}x {item.name}
-              </span>
-              <span className="text-muted-foreground">
-                {formatCurrency(Number(item.unit_price) * item.quantity)}
-              </span>
-            </div>
-          ))}
-          {order.order_items && order.order_items.length > 4 && (
-            <p className="text-xs text-muted-foreground">
-              +{order.order_items.length - 4} more items
+
+      {/* Center: Table Number (Hero) */}
+      <CardContent className="py-8 space-y-1">
+        <div className="text-center">
+          {order.tables && (
+            <>
+              <p className="text-4xl font-bold tracking-tight">
+                {order.tables.label}
+              </p>
+              {order.tables.zone && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  {order.tables.zone}
+                </p>
+              )}
+            </>
+          )}
+          {!order.tables && order.customer_name && (
+            <p className="text-3xl font-bold tracking-tight">
+              {order.customer_name}
             </p>
           )}
         </div>
+      </CardContent>
 
-        {/* Total */}
-        <div className="border-t pt-2 flex justify-between font-semibold">
-          <span>Total</span>
-          <span className="text-primary">{formatCurrency(Number(order.total))}</span>
-        </div>
-
+      {/* Bottom: Action Buttons */}
+      <CardContent className="pt-0 pb-4">
         {/* Payment badge */}
-        {order.payment_status === "paid" ? (
-          <Badge variant="outline" className="w-full justify-center">
-            <CreditCard className="size-3 mr-1" /> Paid
-          </Badge>
-        ) : order.payment_status === "pending" ? (
-          <Badge variant="secondary" className="w-full justify-center">
-            Payment Pending
-          </Badge>
-        ) : null}
+        {order.payment_status === "paid" && (
+          <div className="mb-3">
+            <Badge variant="outline" className="w-full justify-center text-green-700 border-green-300 bg-green-50 dark:bg-green-950/20 dark:border-green-800 dark:text-green-400">
+              <CreditCard className="size-3 mr-1" /> Paid
+            </Badge>
+          </div>
+        )}
+        {order.payment_status === "pending" && (
+          <div className="mb-3">
+            <Badge variant="secondary" className="w-full justify-center">
+              Payment Pending
+            </Badge>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex gap-2">
@@ -746,15 +758,10 @@ function OrderCard({
             </Button>
           )}
           {order.status === "served" && order.payment_status !== "paid" && (
-            <Button size="sm" onClick={onPay} disabled={pending} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button size="sm" onClick={onPay} disabled={pending} className="flex-1 bg-emerald-600 hover:bg-emerald-700">
               <CreditCard className="size-3.5" />
-              <span className="ml-1.5">Process Payment</span>
+              <span className="ml-1.5">Pay</span>
             </Button>
-          )}
-          {order.status === "served" && order.payment_status === "paid" && (
-            <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50 dark:bg-green-950/20 dark:border-green-800 dark:text-green-400">
-              <Check className="size-3 mr-1" /> Completed
-            </Badge>
           )}
         </div>
       </CardContent>
