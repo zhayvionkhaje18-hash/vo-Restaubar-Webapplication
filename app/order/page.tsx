@@ -25,6 +25,7 @@ import {
   Users,
   Lock,
   KeyRound,
+  Receipt,
 } from "lucide-react"
 import type { Category, MenuItem, RestaurantTable, OrderStatus } from "@/lib/types"
 
@@ -54,36 +55,57 @@ interface TrackedOrder {
 }
 
 function OrderStatusTracker({ sessionId }: { sessionId: string | null }) {
-  const [currentStatus, setCurrentStatus] = useState<OrderStatus>("pending")
+  const [orders, setOrders] = useState<TrackedOrder[]>([])
   const [loading, setLoading] = useState(true)
-  const [orderData, setOrderData] = useState<TrackedOrder | null>(null)
 
   useEffect(() => {
     if (!sessionId) return
 
-    async function fetchOrder() {
+    async function fetchOrders() {
       const supabase = createClient()
       const { data } = await supabase
         .from("orders")
-        .select("id, status, subtotal, tax, total, order_items(id, name, unit_price, quantity)")
+        .select("id, status, subtotal, tax, total, created_at, order_items(id, name, unit_price, quantity)")
         .eq("session_id", sessionId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
+        .neq("status", "cancelled") // hide cancelled orders
+        .order("created_at", { ascending: true })
 
-      if (data) {
-        setCurrentStatus(data.status)
-        setOrderData(data as TrackedOrder)
-      }
+      setOrders((data as TrackedOrder[]) ?? [])
       setLoading(false)
     }
 
-    fetchOrder()
+    fetchOrders()
 
     // Poll for updates every 5 seconds
-    const interval = setInterval(fetchOrder, 5000)
+    const interval = setInterval(fetchOrders, 5000)
     return () => clearInterval(interval)
   }, [sessionId])
+
+  // Aggregate across all orders in the session
+  const allItems = orders.flatMap((o) => o.order_items ?? [])
+  const totalSubtotal = orders.reduce((s, o) => s + Number(o.subtotal), 0)
+  const totalTax = orders.reduce((s, o) => s + Number(o.tax), 0)
+  const totalAmount = orders.reduce((s, o) => s + Number(o.total), 0)
+
+  // The "active" status = the earliest order that's still in-progress
+  // (not yet served/cancelled). All later orders follow the same status path.
+  const statusOrder: OrderStatus[] = ["pending", "confirmed", "preparing", "ready", "served"]
+  const activeOrder = orders.find((o) => statusOrder.includes(o.status as OrderStatus))
+  const allServed = orders.length > 0 && orders.every((o) => o.status === "served")
+  const currentStatus: OrderStatus = allServed
+    ? "served"
+    : (activeOrder?.status as OrderStatus) ?? "pending"
+
+  // For the itemized list, show all items from all orders, grouped by order
+  const aggregatedOrderData: TrackedOrder = {
+    id: activeOrder?.id ?? "agg",
+    status: currentStatus,
+    subtotal: totalSubtotal,
+    tax: totalTax,
+    total: totalAmount,
+    order_items: allItems,
+  }
+  const orderData = orders.length > 0 ? aggregatedOrderData : null
 
   function getStepState(stepStatus: OrderStatus): "completed" | "active" | "pending" {
     const statusOrder: OrderStatus[] = ["pending", "confirmed", "preparing", "ready", "served"]
@@ -111,16 +133,30 @@ function OrderStatusTracker({ sessionId }: { sessionId: string | null }) {
 
   const items = orderData?.order_items ?? []
   const itemCount = items.reduce((s, i) => s + i.quantity, 0)
-  const isServed = currentStatus === "served" && orderData
+  const isServed = currentStatus === "served" && orderData && orders.length > 0
+  const hasNoOrders = orders.length === 0
 
   // Reusable itemized list with totals — shown in both states
-  const ItemizedOrderCard = (
+  const ItemizedOrderCard = hasNoOrders ? (
+    <Card>
+      <CardContent className="p-8 text-center">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+          <Receipt className="size-6 text-muted-foreground/50" />
+        </div>
+        <p className="text-sm font-medium">No orders yet</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Orders placed at this table will appear here in real-time.
+        </p>
+      </CardContent>
+    </Card>
+  ) : (
     <Card>
       <CardContent className="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-sm">Your Order</h3>
           <span className="text-xs text-muted-foreground">
-            {itemCount} item{itemCount !== 1 ? "s" : ""}
+            {orders.length} order{orders.length !== 1 ? "s" : ""} · {itemCount} item
+            {itemCount !== 1 ? "s" : ""}
           </span>
         </div>
         <div className="space-y-1 rounded-lg border overflow-hidden">
