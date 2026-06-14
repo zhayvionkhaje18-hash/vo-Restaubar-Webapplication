@@ -24,6 +24,7 @@ function PlayInner() {
   const router = useRouter()
   const sessionId = searchParams.get("session_id")
   const tableId = searchParams.get("table_id")
+  const qrToken = searchParams.get("token")
   const customerName = searchParams.get("name") ?? "Guest"
 
   const [scores, setScores] = useState<ScoreRow[]>([])
@@ -96,7 +97,8 @@ function PlayInner() {
             variant="ghost"
             size="sm"
             onClick={() => {
-              if (sessionId) router.push(`/order?t=${tableId ?? ""}`)
+              if (qrToken) router.push(`/order?t=${qrToken}`)
+              else if (tableId) router.push(`/order?t=${tableId}`)
               else router.push("/")
             }}
             className="text-white hover:bg-white/10"

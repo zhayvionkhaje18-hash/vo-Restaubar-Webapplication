@@ -84,12 +84,19 @@ export function FlappyBird({ onScore, onGameOver, paused = false }: FlappyBirdPr
   // Jump handler
   const jump = useCallback(() => {
     if (paused) return
-    if (stateRef.current.dead) return
+    // If dead, treat this as a restart
+    if (stateRef.current.dead) {
+      reset()
+      // start running on next frame
+      stateRef.current.birdVel = JUMP_VEL
+      setRunning(true)
+      return
+    }
     if (!running) {
       setRunning(true)
     }
     stateRef.current.birdVel = JUMP_VEL
-  }, [running, paused])
+  }, [running, paused, reset])
 
   // Keyboard + touch handlers
   useEffect(() => {
