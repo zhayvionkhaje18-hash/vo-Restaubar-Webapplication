@@ -22,6 +22,9 @@ import {
   Truck,
   PartyPopper,
   Bell,
+  Users,
+  Lock,
+  KeyRound,
 } from "lucide-react"
 import type { Category, MenuItem, RestaurantTable, OrderStatus } from "@/lib/types"
 
@@ -50,20 +53,20 @@ interface TrackedOrder {
   }[]
 }
 
-function OrderStatusTracker({ token }: { token: string | null }) {
+function OrderStatusTracker({ sessionId }: { sessionId: string | null }) {
   const [currentStatus, setCurrentStatus] = useState<OrderStatus>("pending")
   const [loading, setLoading] = useState(true)
   const [orderData, setOrderData] = useState<TrackedOrder | null>(null)
 
   useEffect(() => {
-    if (!token) return
+    if (!sessionId) return
 
     async function fetchOrder() {
       const supabase = createClient()
       const { data } = await supabase
         .from("orders")
         .select("id, status, subtotal, tax, total, order_items(id, name, unit_price, quantity)")
-        .eq("session_token", token)
+        .eq("session_id", sessionId)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle()
@@ -80,7 +83,7 @@ function OrderStatusTracker({ token }: { token: string | null }) {
     // Poll for updates every 5 seconds
     const interval = setInterval(fetchOrder, 5000)
     return () => clearInterval(interval)
-  }, [token])
+  }, [sessionId])
 
   function getStepState(stepStatus: OrderStatus): "completed" | "active" | "pending" {
     const statusOrder: OrderStatus[] = ["pending", "confirmed", "preparing", "ready", "served"]
@@ -319,38 +322,39 @@ function OrderStatusTracker({ token }: { token: string | null }) {
 // ============================================================
 // WELCOME MODAL
 // ============================================================
-function WelcomeModal({
+function CreateSessionModal({
   table,
-  tableCode,
   onSubmit,
 }: {
   table: RestaurantTable | null
-  tableCode: string | null
-  onSubmit: (name: string) => void
+  onSubmit: (name: string, accessCode: string) => Promise<void>
 }) {
   const [name, setName] = useState("")
-  const [code, setCode] = useState("")
-  const [codeError, setCodeError] = useState("")
+  const [accessCode, setAccessCode] = useState("")
+  const [confirmCode, setConfirmCode] = useState("")
+  const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setError("")
     if (!name.trim()) return
-    
-    // Verify table code
-    if (!tableCode) {
-      setCodeError("Table code not available. Please contact staff.")
+    if (!/^\d{4}$/.test(accessCode)) {
+      setError("Access code must be exactly 4 digits")
       return
     }
-    
-    if (code.trim() !== tableCode) {
-      setCodeError("Invalid table code. Please check the code on your table.")
+    if (accessCode !== confirmCode) {
+      setError("Access codes do not match")
       return
     }
-    
-    setCodeError("")
     setLoading(true)
-    onSubmit(name.trim())
+    try {
+      await onSubmit(name.trim(), accessCode)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to start session"
+      setError(msg)
+      setLoading(false)
+    }
   }
 
   return (
@@ -358,12 +362,10 @@ function WelcomeModal({
       <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-300">
         <Card className="border-0 shadow-2xl shadow-black/40">
           <CardContent className="p-8 text-center">
-            {/* Restaurant Logo/Icon */}
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg">
               <UtensilsCrossed className="size-10 text-white" />
             </div>
 
-            {/* Welcome Text */}
             <h1 className="mb-2 text-2xl font-bold tracking-tight text-foreground">
               Welcome to
             </h1>
@@ -371,88 +373,263 @@ function WelcomeModal({
               {RESTAURANT_NAME}
             </p>
             <p className="mb-6 text-sm text-muted-foreground">
-              Fine dining, delivered to your table
+              Start a shared table session
             </p>
 
-            {/* Table Info */}
             {table && (
-              <div className="mb-6 rounded-xl bg-muted/50 px-4 py-3">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">
+              <div className="mb-6 rounded-xl border bg-muted/40 px-4 py-3">
+                <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest">
                   Your Table
                 </p>
-                <p className="text-3xl font-black text-primary">{table.label}</p>
+                <p className="text-2xl sm:text-3xl font-black text-primary">{table.label}</p>
                 {table.zone && (
-                  <p className="text-sm text-muted-foreground">{table.zone}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{table.zone}</p>
                 )}
               </div>
             )}
 
-            {/* Code + Name Input */}
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Table Code Input */}
-              <div className="text-left">
-                <Label htmlFor="tableCode" className="text-sm font-medium">
-                  Table Code *
-                </Label>
-                <Input
-                  id="tableCode"
-                  placeholder="Enter 4-digit code"
-                  value={code}
-                  onChange={(e) => {
-                    setCode(e.target.value.replace(/\D/g, '').slice(0, 4))
-                    setCodeError("")
-                  }}
-                  className="mt-1.5 h-12 text-center text-2xl font-black tracking-widest"
-                  maxLength={4}
-                  required
-                />
-                {codeError && (
-                  <p className="mt-1 text-xs text-destructive">{codeError}</p>
-                )}
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Find the code on your table&apos;s QR card
-                </p>
-              </div>
-
-              {/* Name Input */}
-              <div className="text-left">
-                <Label htmlFor="customerName" className="text-sm font-medium">
-                  Your Name *
+              <div className="text-left space-y-1.5">
+                <Label htmlFor="customerName" className="text-sm font-semibold">
+                  Your Name <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="customerName"
-                  placeholder="Enter your name"
+                  placeholder="e.g. Maria"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="mt-1.5 h-12 text-base"
+                  onChange={(e) => {
+                    setName(e.target.value)
+                    setError("")
+                  }}
+                  className="h-12 text-base"
                   autoComplete="name"
                   required
                 />
+                <p className="text-xs text-muted-foreground">
+                  You&apos;ll be the host of this table&apos;s shared session
+                </p>
               </div>
+
+              <div className="text-left space-y-1.5">
+                <Label htmlFor="accessCode" className="text-sm font-semibold">
+                  Set Access Code <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="accessCode"
+                  inputMode="numeric"
+                  placeholder="4-digit PIN"
+                  value={accessCode}
+                  onChange={(e) => {
+                    setAccessCode(e.target.value.replace(/\D/g, "").slice(0, 4))
+                    setError("")
+                  }}
+                  className="h-12 text-center text-xl sm:text-2xl font-black tracking-[0.4em]"
+                  maxLength={4}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Share this code with friends at your table so they can join
+                </p>
+              </div>
+
+              <div className="text-left space-y-1.5">
+                <Label htmlFor="confirmCode" className="text-sm font-semibold">
+                  Confirm Access Code <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="confirmCode"
+                  inputMode="numeric"
+                  placeholder="Re-enter PIN"
+                  value={confirmCode}
+                  onChange={(e) => {
+                    setConfirmCode(e.target.value.replace(/\D/g, "").slice(0, 4))
+                    setError("")
+                  }}
+                  className="h-12 text-center text-xl sm:text-2xl font-black tracking-[0.4em]"
+                  maxLength={4}
+                  required
+                />
+              </div>
+
+              {error && (
+                <div className="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-xs text-destructive text-left">
+                  {error}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full h-12 text-base font-semibold mt-2"
+                disabled={
+                  !name.trim() ||
+                  accessCode.length !== 4 ||
+                  confirmCode.length !== 4 ||
+                  loading
+                }
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Starting session...
+                  </span>
+                ) : (
+                  <>
+                    <Users className="mr-2 size-5" />
+                    Start Shared Session
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <p className="mt-5 text-xs text-muted-foreground">
+              All guests at your table will share the same cart and orders
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+function JoinSessionModal({
+  table,
+  hostName,
+  onSubmit,
+  onCancel,
+}: {
+  table: RestaurantTable | null
+  hostName: string
+  onSubmit: (accessCode: string) => Promise<void>
+  onCancel: () => void
+}) {
+  const [accessCode, setAccessCode] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [attempts, setAttempts] = useState(0)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError("")
+    if (!/^\d{4}$/.test(accessCode)) {
+      setError("Please enter the 4-digit access code")
+      return
+    }
+    setLoading(true)
+    try {
+      await onSubmit(accessCode)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Incorrect access code"
+      setError(msg)
+      setAttempts((a) => a + 1)
+      setAccessCode("")
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md animate-in fade-in zoom-in-95 duration-300">
+        <Card className="border-0 shadow-2xl shadow-black/40">
+          <CardContent className="p-8 text-center">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40">
+              <Lock className="size-8 text-amber-600 dark:text-amber-400" />
+            </div>
+
+            <h1 className="mb-1 text-xl font-bold tracking-tight text-foreground">
+              Table Session Active
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              This table is already hosting a session
+            </p>
+
+            {table && (
+              <div className="mt-5 mb-5 rounded-xl border bg-muted/40 px-4 py-3">
+                <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                  Table
+                </p>
+                <p className="text-2xl sm:text-3xl font-black text-primary">{table.label}</p>
+                {table.zone && (
+                  <p className="text-xs sm:text-sm text-muted-foreground">{table.zone}</p>
+                )}
+              </div>
+            )}
+
+            <div className="rounded-xl border border-amber-200 bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-800/50 p-4 mb-5">
+              <p className="text-xs text-amber-700 dark:text-amber-400/80 uppercase tracking-wider font-semibold">
+                Session Host
+              </p>
+              <p className="text-lg font-bold text-amber-800 dark:text-amber-300 mt-0.5">
+                {hostName}
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="text-left space-y-1.5">
+                <Label htmlFor="joinCode" className="text-sm font-semibold">
+                  Enter Access Code <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="joinCode"
+                  inputMode="numeric"
+                  placeholder="4-digit PIN from the host"
+                  value={accessCode}
+                  onChange={(e) => {
+                    setAccessCode(e.target.value.replace(/\D/g, "").slice(0, 4))
+                    setError("")
+                  }}
+                  className="h-12 text-center text-xl sm:text-2xl font-black tracking-[0.4em]"
+                  maxLength={4}
+                  autoFocus
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Ask the host for the 4-digit PIN
+                </p>
+              </div>
+
+              {error && (
+                <div className="rounded-lg border border-destructive/50 bg-destructive/5 px-3 py-2 text-xs text-destructive text-left">
+                  {error}
+                </div>
+              )}
+
+              {attempts >= 2 && (
+                <p className="text-xs text-muted-foreground">
+                  Need help? Please ask the host to share the access code.
+                </p>
+              )}
 
               <Button
                 type="submit"
                 size="lg"
                 className="w-full h-12 text-base font-semibold"
-                disabled={!name.trim() || code.length !== 4 || loading}
+                disabled={accessCode.length !== 4 || loading}
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
                     <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Please wait...
+                    Verifying...
                   </span>
                 ) : (
                   <>
-                    <UtensilsCrossed className="mr-2 size-5" />
-                    View Menu & Order
+                    <KeyRound className="mr-2 size-5" />
+                    Join Session
                   </>
                 )}
               </Button>
             </form>
 
             <p className="mt-4 text-xs text-muted-foreground">
-              Waiter will confirm your order shortly
+              Only people with the access code can join this table&apos;s session.
             </p>
+
+            <button
+              onClick={onCancel}
+              className="mt-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Not your table? Go back
+            </button>
           </CardContent>
         </Card>
       </div>
@@ -762,18 +939,25 @@ function CustomerOrderContent() {
   const [table, setTable] = useState<RestaurantTable | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
-  const [customerName, setCustomerName] = useState<string | null>(null)
-  const [showWelcome, setShowWelcome] = useState(true)
   const [cart, setCart] = useState<CartItem[]>([])
   const [showCart, setShowCart] = useState(false)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [orderPlaced, setOrderPlaced] = useState(false)
-  const [orderNumber, setOrderNumber] = useState<number | null>(null)
   const [activeCategory, setActiveCategory] = useState<string>("all")
   const [taxRate, setTaxRate] = useState<number>(0.12) // default fallback
+  const [orderPlaced, setOrderPlaced] = useState(false)
+  const [orderNumber, setOrderNumber] = useState<number | null>(null)
 
-  // Load table, categories, menu, and settings
+  // Session state
+  type SessionState =
+    | { kind: "loading" }
+    | { kind: "create" }
+    | { kind: "join"; hostName: string }
+    | { kind: "active"; sessionId: string; hostName: string; myName: string }
+  const [sessionState, setSessionState] = useState<SessionState>({ kind: "loading" })
+  const [sessionError, setSessionError] = useState<string | null>(null)
+
+  // Load table, categories, menu, and settings + check active session
   useEffect(() => {
     if (!token) return
 
@@ -802,44 +986,120 @@ function CustomerOrderContent() {
 
       setTable(tableData)
 
-      // Get categories
-      const { data: catData } = await supabase
-        .from("categories")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order")
-
-      setCategories(catData ?? [])
-
-      // Get menu items
-      const { data: menuData } = await supabase
-        .from("menu_items")
-        .select("*")
-        .eq("is_available", true)
-        .order("name")
-
-      setMenuItems(menuData ?? [])
-
-      // Get tax rate from settings
-      const { data: settingsData } = await supabase
-        .from("restaurant_settings")
-        .select("tax_rate")
-        .limit(1)
+      // Check for active session on this table
+      const { data: activeSession } = await supabase
+        .from("table_sessions")
+        .select("id, customer_name, status")
+        .eq("table_id", tableData.id)
+        .eq("status", "active")
         .maybeSingle()
 
-      if (settingsData?.tax_rate != null) {
-        setTaxRate(settingsData.tax_rate / 100) // stored as 12, convert to 0.12
+      // Check if this device already has a session token in localStorage
+      const storedSessionId = typeof window !== "undefined" ? localStorage.getItem(`session_${tableData.id}`) : null
+      if (storedSessionId) {
+        // Verify stored session is still valid + matches active session
+        const { data: storedSession } = await supabase
+          .from("table_sessions")
+          .select("id, customer_name, status")
+          .eq("id", storedSessionId)
+          .eq("status", "active")
+          .maybeSingle()
+        if (storedSession) {
+          setSessionState({
+            kind: "active",
+            sessionId: storedSession.id,
+            hostName: storedSession.customer_name,
+            myName: storedSession.customer_name,
+          })
+          await loadMenu()
+          return
+        }
+        // Stored session is dead — clear it
+        localStorage.removeItem(`session_${tableData.id}`)
       }
 
-      setLoading(false)
+      // No valid session yet
+      if (activeSession) {
+        setSessionState({ kind: "join", hostName: activeSession.customer_name })
+      } else {
+        setSessionState({ kind: "create" })
+      }
+
+      await loadMenu()
+
+      async function loadMenu() {
+        // Get categories
+        const { data: catData } = await supabase
+          .from("categories")
+          .select("*")
+          .eq("is_active", true)
+          .order("sort_order")
+        setCategories(catData ?? [])
+
+        // Get menu items
+        const { data: menuData } = await supabase
+          .from("menu_items")
+          .select("*")
+          .eq("is_available", true)
+          .order("name")
+        setMenuItems(menuData ?? [])
+
+        // Get tax rate
+        const { data: settingsData } = await supabase
+          .from("restaurant_settings")
+          .select("tax_rate")
+          .limit(1)
+          .maybeSingle()
+        if (settingsData?.tax_rate != null) {
+          setTaxRate(settingsData.tax_rate / 100)
+        }
+
+        setLoading(false)
+      }
     }
 
     load()
   }, [token, supabase])
 
-  function handleWelcomeSubmit(name: string) {
-    setCustomerName(name)
-    setShowWelcome(false)
+  // Create new session (first customer)
+  async function handleCreateSession(name: string, accessCode: string) {
+    if (!table) return
+    setSessionError(null)
+    const res = await fetch("/api/table-sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "create", table_id: table.id, customer_name: name, access_code: accessCode }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || "Failed to start session")
+    // Persist session id
+    localStorage.setItem(`session_${table.id}`, data.session.id)
+    setSessionState({
+      kind: "active",
+      sessionId: data.session.id,
+      hostName: data.session.customer_name,
+      myName: data.session.customer_name,
+    })
+  }
+
+  // Join existing session
+  async function handleJoinSession(accessCode: string) {
+    if (!table) return
+    setSessionError(null)
+    const res = await fetch("/api/table-sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "join", table_id: table.id, access_code: accessCode }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || "Incorrect access code")
+    localStorage.setItem(`session_${table.id}`, data.session.id)
+    setSessionState({
+      kind: "active",
+      sessionId: data.session.id,
+      hostName: data.session.customer_name,
+      myName: data.session.customer_name, // joiners don't set their own name in this flow
+    })
   }
 
   function addToCart(item: MenuItem) {
@@ -874,7 +1134,8 @@ function CustomerOrderContent() {
   const cartCount = cart.reduce((sum, c) => sum + c.quantity, 0)
 
   async function handleSubmitOrder() {
-    if (!token || !table || !customerName || cart.length === 0) return
+    if (!table || cart.length === 0) return
+    if (sessionState.kind !== "active") return
 
     setSubmitting(true)
 
@@ -883,13 +1144,14 @@ function CustomerOrderContent() {
     const currentTax = Math.round(currentCartTotal * taxRate * 100) / 100
     const currentTotal = Math.round((currentCartTotal + currentTax) * 100) / 100
 
-    // Create order
+    // Create order linked to the active table session
     const { data: orderData, error: orderError } = await supabase
       .from("orders")
       .insert({
         table_id: table.id,
-        session_token: token,
-        customer_name: customerName,
+        session_id: sessionState.sessionId,
+        session_token: sessionState.sessionId, // legacy field, keep populated
+        customer_name: sessionState.myName,
         status: "pending",
         payment_status: "unpaid",
         subtotal: currentCartTotal,
@@ -924,11 +1186,11 @@ function CustomerOrderContent() {
       return
     }
 
-    // Show confirmation FIRST — this triggers the re-render immediately
+    // Show confirmation FIRST
     setOrderPlaced(true)
     setOrderNumber(orderData.order_number)
 
-    // Then clear the cart/drawer — happens in same batch after confirmation renders
+    // Clear cart + drawer
     setCart([])
     setShowCart(false)
     setSubmitting(false)
@@ -1020,22 +1282,50 @@ function CustomerOrderContent() {
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                     Name
                   </p>
-                  <p className="font-bold text-lg sm:text-xl truncate">{customerName}</p>
+                  <p className="font-bold text-lg sm:text-xl truncate">
+                    {sessionState.kind === "active" ? sessionState.myName : ""}
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Status Tracker — shows step tracker or completion dashboard if served */}
-          <OrderStatusTracker token={token} />
+          <OrderStatusTracker
+            sessionId={sessionState.kind === "active" ? sessionState.sessionId : null}
+          />
         </main>
       </div>
     )
   }
 
-  // Welcome modal
-  if (showWelcome) {
-    return <WelcomeModal table={table} tableCode={(table as any).table_code} onSubmit={handleWelcomeSubmit} />
+  // Create session (first customer) modal
+  if (sessionState.kind === "create") {
+    return (
+      <CreateSessionModal
+        table={table}
+        onSubmit={async (name, code) => {
+          await handleCreateSession(name, code)
+        }}
+      />
+    )
+  }
+
+  // Join session (subsequent customers) modal
+  if (sessionState.kind === "join") {
+    return (
+      <JoinSessionModal
+        table={table}
+        hostName={sessionState.hostName}
+        onSubmit={async (code) => {
+          await handleJoinSession(code)
+        }}
+        onCancel={() => {
+          // Allow them to back out — reload to scan a different QR
+          window.location.href = "/"
+        }}
+      />
+    )
   }
 
   // Filtered menu
@@ -1058,7 +1348,7 @@ function CustomerOrderContent() {
                 {RESTAURANT_NAME}
               </p>
               <p className="text-xs text-muted-foreground truncate">
-                Table {table.label} · {customerName}
+                Table {table.label} · {sessionState.kind === "active" ? sessionState.myName : ""}
               </p>
             </div>
           </div>
@@ -1133,7 +1423,7 @@ function CustomerOrderContent() {
         cartTotal={cartTotal}
         taxRate={taxRate}
         onSubmit={handleSubmitOrder}
-        customerName={customerName ?? ""}
+        customerName={sessionState.kind === "active" ? sessionState.myName : ""}
         submitting={submitting}
         onIncrease={(id) => updateQuantity(id, 1)}
         onDecrease={(id) => updateQuantity(id, -1)}
