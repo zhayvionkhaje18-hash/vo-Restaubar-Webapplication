@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/select"
 import { formatCurrency, formatDateTime } from "@/lib/constants"
 import type { Profile } from "@/lib/types"
-import { processTableSessionPayment } from "@/app/actions/table-sessions"
+import { processTableSessionPayment, cancelTableSession } from "@/app/actions/table-sessions"
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/pos", label: "POS Terminal", icon: "LayoutDashboard" },
@@ -105,6 +105,7 @@ export function PosTablesClient({
   const [showPayDialog, setShowPayDialog] = useState(false)
   const [payMethod, setPayMethod] = useState<"cash" | "card" | "gcash" | "maya">("cash")
   const [payAmountTendered, setPayAmountTendered] = useState("")
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
 
   // Index sessions by table_id for quick lookup
   const sessionByTable = useMemo(() => {
@@ -188,6 +189,23 @@ export function PosTablesClient({
         return
       }
       // Refresh
+      closeTableAccount()
+      router.refresh()
+    })
+  }
+
+  async function handleConfirmCancel() {
+    if (!selectedSession) return
+    startTransition(async () => {
+      const result = await cancelTableSession({
+        session_id: selectedSession.id,
+        reason: "Cancelled by staff",
+      })
+      if (result?.error) {
+        alert(result.error)
+        return
+      }
+      setShowCancelDialog(false)
       closeTableAccount()
       router.refresh()
     })
@@ -450,21 +468,35 @@ export function PosTablesClient({
 
               {/* Footer */}
               <div className="border-t px-6 py-4 shrink-0 bg-muted/10">
-                <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2">
-                  <Button variant="ghost" onClick={closeTableAccount} size="sm">
-                    Close
-                  </Button>
-                  {unpaidOrders.length > 0 && (
+                <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button
-                      onClick={() => setShowPayDialog(true)}
+                      variant="outline"
+                      onClick={() => setShowCancelDialog(true)}
                       disabled={pending}
                       size="sm"
-                      className="bg-emerald-600 hover:bg-emerald-700"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
-                      <CreditCard className="size-3.5" />
-                      <span className="ml-1.5">Process Payment</span>
+                      <XCircle className="size-3.5" />
+                      <span className="ml-1.5">Cancel Session</span>
                     </Button>
-                  )}
+                  </div>
+                  <div className="flex gap-2 sm:ml-auto">
+                    <Button variant="ghost" onClick={closeTableAccount} size="sm">
+                      Close
+                    </Button>
+                    {unpaidOrders.length > 0 && (
+                      <Button
+                        onClick={() => setShowPayDialog(true)}
+                        disabled={pending}
+                        size="sm"
+                        className="bg-emerald-600 hover:bg-emerald-700"
+                      >
+                        <CreditCard className="size-3.5" />
+                        <span className="ml-1.5">Process Payment</span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </>
@@ -602,6 +634,87 @@ export function PosTablesClient({
             >
               {pending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
               <span className="ml-1.5">Confirm Payment</span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Session Dialog */}
+      <Dialog
+        open={showCancelDialog}
+        onOpenChange={(o) => setShowCancelDialog(o)}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
+              <XCircle className="size-5" />
+              Cancel Table Session
+            </DialogTitle>
+            <DialogDescription>
+              {selectedTable?.label} ·{" "}
+              {selectedSession && (
+                <span className="font-medium text-foreground">
+                  {selectedSession.customer_name}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="rounded-lg border-2 border-red-200 bg-red-50/60 dark:bg-red-950/20 dark:border-red-800/40 p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="size-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                    This will cancel the active session
+                  </p>
+                  <p className="text-xs text-red-600/80 dark:text-red-400/70 mt-1">
+                    The session will be archived and the table will return to Available.
+                    All open orders will be marked as cancelled.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {unpaidOrders.length > 0 && (
+              <div className="rounded-md border bg-muted/40 p-3 text-xs space-y-1.5 text-muted-foreground">
+                <p className="font-semibold text-foreground text-sm">
+                  {unpaidOrders.length} open order{unpaidOrders.length !== 1 ? "s" : ""} will be cancelled:
+                </p>
+                <ul className="space-y-0.5 pl-4 list-disc">
+                  {unpaidOrders.map((o) => (
+                    <li key={o.id}>
+                      Order #{o.order_number} · {formatCurrency(Number(o.total))}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="rounded-md border bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/40 p-3 text-xs text-amber-800 dark:text-amber-300">
+              <p className="font-semibold">No payment will be recorded.</p>
+              <p className="mt-1 text-amber-700/80 dark:text-amber-400/70">
+                Use this only for walk-outs, system errors, or staff-initiated closures. For
+                paid bills, use <strong>Process Payment</strong> instead.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelDialog(false)}
+              disabled={pending}
+            >
+              Keep Session Active
+            </Button>
+            <Button
+              onClick={handleConfirmCancel}
+              disabled={pending}
+              variant="destructive"
+            >
+              {pending ? <Loader2 className="size-4 animate-spin" /> : <XCircle className="size-4" />}
+              <span className="ml-1.5">Cancel Session</span>
             </Button>
           </DialogFooter>
         </DialogContent>
