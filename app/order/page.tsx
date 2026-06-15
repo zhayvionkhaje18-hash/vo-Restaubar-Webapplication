@@ -1323,7 +1323,7 @@ function CustomerOrderContent() {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Order Number
               </p>
-              <p className="text-3xl sm:text-4xl font-black text-primary mt-0.5 tabular-nums">
+              <p className="text-3xl sm:text-4xl font-black text-amber-600 dark:text-amber-400 mt-0.5 tabular-nums">
                 #{orderNumber}
               </p>
             </div>
