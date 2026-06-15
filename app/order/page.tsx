@@ -1010,7 +1010,17 @@ function CustomerOrderContent() {
 
     async function load() {
       setLoading(true)
+      try {
+        await loadData()
+      } catch (err) {
+        console.error("[OrderPage] load failed:", err)
+        // Reset to a safe state so the page doesn't crash
+        setSessionState({ kind: "create" })
+        setLoading(false)
+      }
+    }
 
+    async function loadData() {
       // Find table by QR token
       const { data: qrData } = await supabase
         .from("table_qr_codes")
