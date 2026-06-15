@@ -1354,40 +1354,42 @@ function CustomerOrderContent() {
 
           {/* Play While Waiting — game link */}
           {sessionState.kind === "active" && sessionState.sessionId && (
-            <Button
-              onClick={() => {
-                setOrderPlaced(false)
-                setShowCart(false)
-              }}
-              variant="outline"
-              className="w-full"
-              size="lg"
-            >
-              <Plus className="mr-2 size-5" />
-              Add more items to your order
-            </Button>
+            <>
+              <Button
+                onClick={() => {
+                  setOrderPlaced(false)
+                  setShowCart(false)
+                }}
+                variant="outline"
+                className="w-full"
+                size="lg"
+              >
+                <Plus className="mr-2 size-5" />
+                Add more items to your order
+              </Button>
 
-            <a
-              href={`/play?session_id=${sessionState.sessionId}&table_id=${table?.id ?? ""}&name=${encodeURIComponent(sessionState.myName)}&token=${token ?? ""}`}
-              className="group flex items-center justify-between gap-3 rounded-2xl border-2 border-purple-200 dark:border-purple-800/50 bg-gradient-to-r from-purple-50 via-pink-50 to-amber-50 dark:from-purple-950/40 dark:via-pink-950/30 dark:to-amber-950/30 p-4 sm:p-5 transition-all hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/20 hover:-translate-y-0.5"
-            >
-              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                <div className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 shadow-md shadow-purple-500/30 group-hover:scale-110 transition-transform">
-                  <Gamepad2 className="size-5 sm:size-6 text-white" />
+              <a
+                href={`/play?session_id=${sessionState.sessionId}&table_id=${table?.id ?? ""}&name=${encodeURIComponent(sessionState.myName)}&token=${token ?? ""}`}
+                className="group flex items-center justify-between gap-3 rounded-2xl border-2 border-purple-200 dark:border-purple-800/50 bg-gradient-to-r from-purple-50 via-pink-50 to-amber-50 dark:from-purple-950/40 dark:via-pink-950/30 dark:to-amber-950/30 p-4 sm:p-5 transition-all hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/20 hover:-translate-y-0.5"
+              >
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  <div className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 shadow-md shadow-purple-500/30 group-hover:scale-110 transition-transform">
+                    <Gamepad2 className="size-5 sm:size-6 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm sm:text-base text-purple-900 dark:text-purple-200">
+                      Want to play some games while waiting? 🎮
+                    </p>
+                    <p className="text-xs text-purple-700/70 dark:text-purple-300/70 mt-0.5">
+                      Tap here for Flappy Bird and other mini games
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="font-bold text-sm sm:text-base text-purple-900 dark:text-purple-200">
-                    Want to play some games while waiting? 🎮
-                  </p>
-                  <p className="text-xs text-purple-700/70 dark:text-purple-300/70 mt-0.5">
-                    Tap here for Flappy Bird and other mini games
-                  </p>
+                <div className="shrink-0 text-purple-600 dark:text-purple-300 group-hover:translate-x-1 transition-transform">
+                  <ChevronRight className="size-5" />
                 </div>
-              </div>
-              <div className="shrink-0 text-purple-600 dark:text-purple-300 group-hover:translate-x-1 transition-transform">
-                <ChevronRight className="size-5" />
-              </div>
-            </a>
+              </a>
+            </>
           )}
         </main>
       </div>
