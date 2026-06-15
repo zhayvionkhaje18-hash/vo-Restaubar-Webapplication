@@ -983,8 +983,16 @@ function CustomerOrderContent() {
   const [submitting, setSubmitting] = useState(false)
   const [activeCategory, setActiveCategory] = useState<string>("all")
   const [taxRate, setTaxRate] = useState<number>(0.12) // default fallback
-  const [orderPlaced, setOrderPlaced] = useState(false)
+  const [orderPlaced, setOrderPlacedState] = useState(false)
   const [orderNumber, setOrderNumber] = useState<number | null>(null)
+  // Sync orderPlaced with localStorage (keyed by session id) so /play → back returns to Order Placed view
+  const setOrderPlaced = (v: boolean) => {
+    setOrderPlacedState(v)
+    if (typeof window === "undefined") return
+    const sid = sessionState.kind === "active" ? sessionState.sessionId : "default"
+    if (v) localStorage.setItem(`order_placed_${sid}`, "1")
+    else localStorage.removeItem(`order_placed_${sid}`)
+  }
 
   // Session state
   type SessionState =
@@ -1139,6 +1147,16 @@ function CustomerOrderContent() {
       myName: data.session.customer_name, // joiners don't set their own name in this flow
     })
   }
+
+  // Hydrate orderPlaced from localStorage when the active session changes
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    if (sessionState.kind !== "active") return
+    const stored = localStorage.getItem(`order_placed_${sessionState.sessionId}`)
+    if (stored === "1" && !orderPlaced) {
+      setOrderPlacedState(true)
+    }
+  }, [sessionState.kind === "active" ? sessionState.sessionId : null, orderPlaced])
 
   function addToCart(item: MenuItem) {
     setCart((prev) => {
@@ -1335,6 +1353,19 @@ function CustomerOrderContent() {
 
           {/* Play While Waiting — game link */}
           {sessionState.kind === "active" && sessionState.sessionId && (
+            <Button
+              onClick={() => {
+                setOrderPlaced(false)
+                setShowCart(false)
+              }}
+              variant="outline"
+              className="w-full"
+              size="lg"
+            >
+              <Plus className="mr-2 size-5" />
+              Add more items to your order
+            </Button>
+
             <a
               href={`/play?session_id=${sessionState.sessionId}&table_id=${table?.id ?? ""}&name=${encodeURIComponent(sessionState.myName)}&token=${token ?? ""}`}
               className="group flex items-center justify-between gap-3 rounded-2xl border-2 border-purple-200 dark:border-purple-800/50 bg-gradient-to-r from-purple-50 via-pink-50 to-amber-50 dark:from-purple-950/40 dark:via-pink-950/30 dark:to-amber-950/30 p-4 sm:p-5 transition-all hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/20 hover:-translate-y-0.5"
