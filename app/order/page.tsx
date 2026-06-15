@@ -985,14 +985,6 @@ function CustomerOrderContent() {
   const [taxRate, setTaxRate] = useState<number>(0.12) // default fallback
   const [orderPlaced, setOrderPlacedState] = useState(false)
   const [orderNumber, setOrderNumber] = useState<number | null>(null)
-  // Sync orderPlaced with localStorage (keyed by session id) so /play → back returns to Order Placed view
-  const setOrderPlaced = (v: boolean) => {
-    setOrderPlacedState(v)
-    if (typeof window === "undefined") return
-    const sid = sessionState.kind === "active" ? sessionState.sessionId : "default"
-    if (v) localStorage.setItem(`order_placed_${sid}`, "1")
-    else localStorage.removeItem(`order_placed_${sid}`)
-  }
 
   // Session state
   type SessionState =
@@ -1002,6 +994,15 @@ function CustomerOrderContent() {
     | { kind: "active"; sessionId: string; hostName: string; myName: string }
   const [sessionState, setSessionState] = useState<SessionState>({ kind: "loading" })
   const [sessionError, setSessionError] = useState<string | null>(null)
+
+  // Sync orderPlaced with localStorage (keyed by session id) so /play → back returns to Order Placed view
+  const setOrderPlaced = (v: boolean) => {
+    setOrderPlacedState(v)
+    if (typeof window === "undefined") return
+    const sid = sessionState.kind === "active" ? sessionState.sessionId : "default"
+    if (v) localStorage.setItem(`order_placed_${sid}`, "1")
+    else localStorage.removeItem(`order_placed_${sid}`)
+  }
 
   // Load table, categories, menu, and settings + check active session
   useEffect(() => {
