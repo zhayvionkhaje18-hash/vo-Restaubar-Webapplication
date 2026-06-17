@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { getSessionProfile } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server"
 import { PosOrdersClient } from "@/components/dashboard/pos-orders-client"
+import { ErrorBoundary } from "@/components/ui/error-boundary"
 
 export default async function PosOrdersPage() {
   const profile = await getSessionProfile()
@@ -33,5 +34,9 @@ export default async function PosOrdersPage() {
   // Filter out any orders with null status (defensive)
   const safeOrders = (orders ?? []).filter((o) => o.status !== null)
 
-  return <PosOrdersClient profile={profile} initialOrders={safeOrders} />
+  return (
+    <ErrorBoundary>
+      <PosOrdersClient profile={profile} initialOrders={safeOrders} />
+    </ErrorBoundary>
+  )
 }
