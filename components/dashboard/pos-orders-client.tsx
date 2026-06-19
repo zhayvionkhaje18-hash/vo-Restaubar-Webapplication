@@ -641,8 +641,8 @@ export function PosOrdersClient({
         </DialogContent>
       </Dialog>
 
-      {/* Menu Browser Modal */}
-      {selectedOrder && (
+      {/* Menu Browser Modal — temporarily disabled to debug error #130 */}
+      {false && selectedOrder && (
         <MenuBrowserModal
           open={showMenuModal}
           onClose={() => setShowMenuModal(false)}
@@ -653,16 +653,18 @@ export function PosOrdersClient({
         />
       )}
 
-      {/* Cancel Order Modal */}
-      <CancelOrderModal
-        order={orderToCancel}
-        open={showCancelModal}
-        onClose={() => {
-          setShowCancelModal(false)
-          setOrderToCancel(null)
-        }}
-        onSuccess={handleCancelSuccess}
-      />
+      {/* Cancel Order Modal — temporarily disabled to debug error #130 */}
+      {false && (
+        <CancelOrderModal
+          order={orderToCancel}
+          open={showCancelModal}
+          onClose={() => {
+            setShowCancelModal(false)
+            setOrderToCancel(null)
+          }}
+          onSuccess={handleCancelSuccess}
+        />
+      )}
     </StaffShell>
   )
 }
