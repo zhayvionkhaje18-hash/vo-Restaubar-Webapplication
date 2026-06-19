@@ -429,69 +429,74 @@ function WaiterOrderCard({
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <CardTitle className="text-base">
+      <CardHeader className="pb-3">
+        {/* Header: Order # + Status Badge */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-muted-foreground mb-1">Order</p>
+            <CardTitle className="text-base font-bold tracking-tight">
               #{order.order_number}
-              {order.tables && (
-                <span className="ml-2 text-sm font-normal text-muted-foreground">
-                  {order.tables.label}
-                </span>
-              )}
             </CardTitle>
-            {order.customer_name && (
-              <p className="text-sm text-muted-foreground">{order.customer_name}</p>
-            )}
           </div>
           <Badge className={config?.color ?? "bg-gray-100"}>
             <span className="mr-1">{config?.icon}</span>
             {config?.label}
           </Badge>
         </div>
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          <Clock className="size-3" />
-          {formatTime(new Date(order.created_at))}
-          {isPending && !isClaimedByMe && (
-            <span className="ml-2 text-amber-600 font-medium">Needs assistance</span>
-          )}
-          {isClaimedByMe && (
-            <span className="ml-2 text-blue-600 font-medium">My table</span>
-          )}
-        </p>
       </CardHeader>
 
-      <CardContent className="space-y-3">
-        {/* Items preview */}
-        <div className="space-y-1 text-sm max-h-24 overflow-hidden">
-          {order.order_items?.slice(0, 3).map((item) => (
-            <div key={item.id} className="flex justify-between text-muted-foreground">
-              <span>{item.quantity}x {item.name}</span>
-              <span>{formatCurrency(Number(item.unit_price) * item.quantity)}</span>
-            </div>
-          ))}
-          {order.order_items && order.order_items.length > 3 && (
-            <p className="text-xs text-muted-foreground">+{order.order_items.length - 3} more items</p>
+      {/* Center: Table Number (Hero) */}
+      <CardContent className="py-8 space-y-1">
+        <div className="text-center">
+          {order.tables && (
+            <>
+              <p className="text-4xl font-bold tracking-tight">
+                {order.tables.label}
+              </p>
+              {order.tables.zone && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  {order.tables.zone}
+                </p>
+              )}
+            </>
+          )}
+          {!order.tables && order.customer_name && (
+            <p className="text-3xl font-bold tracking-tight">
+              {order.customer_name}
+            </p>
           )}
         </div>
+      </CardContent>
 
-        {/* Total */}
-        <div className="border-t pt-2 flex justify-between font-semibold">
-          <span>Total</span>
-          <span className="text-primary">{formatCurrency(Number(order.total))}</span>
-        </div>
+      {/* Bottom: Status Alerts & Buttons */}
+      <CardContent className="pt-0 pb-4 space-y-3">
+        {/* Status alerts (if any) */}
+        {isPending && !isClaimedByMe && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+            <AlertCircle className="size-4 text-amber-600 dark:text-amber-500 shrink-0" />
+            <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
+              Needs assistance
+            </span>
+          </div>
+        )}
+        {isClaimedByMe && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
+            <CheckCircle2 className="size-4 text-blue-600 dark:text-blue-500 shrink-0" />
+            <span className="text-xs font-medium text-blue-700 dark:text-blue-400">
+              My table
+            </span>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex gap-2">
           {/* Pending orders: Assist or View (if already claimed) */}
           {isPending ? (
             isClaimedByMe ? (
-              <>
-                <Button size="sm" variant="outline" onClick={onView} className="flex-1">
-                  <Eye className="size-3.5" />
-                  <span className="ml-1.5">View & Confirm</span>
-                </Button>
-              </>
+              <Button size="sm" variant="outline" onClick={onView} className="flex-1">
+                <Eye className="size-3.5" />
+                <span className="ml-1.5">View & Confirm</span>
+              </Button>
             ) : (
               <Button
                 size="sm"
@@ -509,6 +514,33 @@ function WaiterOrderCard({
             )
           ) : (
             <>
+              <Button size="sm" variant="outline" onClick={onView} className="flex-1">
+                <Eye className="size-3.5" />
+                <span className="ml-1.5">View</span>
+              </Button>
+              {next && (
+                <Button
+                  size="sm"
+                  onClick={() => onStatusUpdate(next)}
+                  disabled={pending}
+                  className="flex-1"
+                >
+                  {pending ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    STATUS_ACTION[order.status as OrderStatus]?.icon
+                  )}
+                  <span className="ml-1.5">
+                    {pending ? "Updating..." : STATUS_ACTION[order.status as OrderStatus]?.label}
+                  </span>
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
               <Button size="sm" variant="outline" onClick={onView} className="flex-1">
                 <Eye className="size-3.5" />
                 <span className="ml-1.5">View</span>
