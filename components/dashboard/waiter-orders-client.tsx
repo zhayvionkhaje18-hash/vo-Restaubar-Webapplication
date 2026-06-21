@@ -541,31 +541,4 @@ function WaiterOrderCard({
       </CardContent>
     </Card>
   )
-              <Button size="sm" variant="outline" onClick={onView} className="flex-1">
-                <Eye className="size-3.5" />
-                <span className="ml-1.5">View</span>
-              </Button>
-              {next && (
-                <Button
-                  size="sm"
-                  onClick={() => onStatusUpdate(next)}
-                  disabled={pending}
-                  className="flex-1"
-                >
-                  {pending ? (
-                    <Loader2 className="size-3.5 animate-spin" />
-                  ) : (
-                    STATUS_ACTION[order.status as OrderStatus]?.icon
-                  )}
-                  <span className="ml-1.5">
-                    {pending ? "Updating..." : STATUS_ACTION[order.status as OrderStatus]?.label}
-                  </span>
-                </Button>
-              )}
-            </>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  )
 }
